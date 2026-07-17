@@ -16,8 +16,6 @@ interface Dot {
 interface PointerState {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   speed: number;
   lastTime: number;
   lastX: number;
@@ -39,17 +37,6 @@ interface DotGridProps {
   className?: string;
   style?: CSSProperties;
 }
-
-const throttle = <T extends unknown[]>(func: (...args: T) => void, limit: number) => {
-  let lastCall = 0;
-  return function (...args: T) {
-    const now = performance.now();
-    if (now - lastCall >= limit) {
-      lastCall = now;
-      func(...args);
-    }
-  };
-};
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
@@ -78,12 +65,12 @@ const DotGrid = ({
 }: DotGridProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Cached 2D context — avoids getContext() on every RAF frame
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const dotsRef = useRef<Dot[]>([]);
   const pointerRef = useRef<PointerState>({
     x: 0,
     y: 0,
-    vx: 0,
-    vy: 0,
     speed: 0,
     lastTime: 0,
     lastX: 0,
@@ -105,6 +92,11 @@ const DotGrid = ({
     const canvas = canvasRef.current;
     if (!wrap || !canvas) return;
 
+    // Kill any in-flight tweens before replacing dots array
+    for (const dot of dotsRef.current) {
+      gsap.killTweensOf(dot);
+    }
+
     const { width, height } = wrap.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
 
@@ -112,7 +104,10 @@ const DotGrid = ({
     canvas.height = height * dpr;
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
+
+    // Cache the context
     const ctx = canvas.getContext('2d');
+    ctxRef.current = ctx;
     if (ctx) ctx.scale(dpr, dpr);
 
     const cols = Math.floor((width + gap) / (dotSize + gap));
@@ -128,26 +123,38 @@ const DotGrid = ({
     const dots: Dot[] = [];
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
-        const cx = startX + x * cell;
-        const cy = startY + y * cell;
-        dots.push({ cx, cy, xOffset: 0, yOffset: 0, _animating: false });
+        dots.push({
+          cx: startX + x * cell,
+          cy: startY + y * cell,
+          xOffset: 0,
+          yOffset: 0,
+          _animating: false,
+        });
       }
     }
     dotsRef.current = dots;
   }, [dotSize, gap]);
 
-  // Draw loop
+  // Draw loop — uses cached ctx, pre-computed proxSq, and shared rgb values
   useEffect(() => {
     if (!circlePath) return;
 
     let rafId: number;
     const proxSq = proximity * proximity;
+    // Pre-compute delta components for interpolation
+    const dr = activeRgb.r - baseRgb.r;
+    const dg = activeRgb.g - baseRgb.g;
+    const db = activeRgb.b - baseRgb.b;
+    const baseColorStr = `rgb(${baseRgb.r},${baseRgb.g},${baseRgb.b})`;
 
     const draw = () => {
+      const ctx = ctxRef.current;
       const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx || !canvas) {
+        rafId = requestAnimationFrame(draw);
+        return;
+      }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const { x: px, y: py } = pointerRef.current;
@@ -155,23 +162,20 @@ const DotGrid = ({
       for (const dot of dotsRef.current) {
         const ox = dot.cx + dot.xOffset;
         const oy = dot.cy + dot.yOffset;
-        const dx = dot.cx - px;
-        const dy = dot.cy - py;
-        const dsq = dx * dx + dy * dy;
-
-        let fillStyle = baseColor;
-        if (dsq <= proxSq) {
-          const dist = Math.sqrt(dsq);
-          const t = 1 - dist / proximity;
-          const r = Math.round(baseRgb.r + (activeRgb.r - baseRgb.r) * t);
-          const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
-          const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
-          fillStyle = `rgb(${r},${g},${b})`;
-        }
+        const ddx = dot.cx - px;
+        const ddy = dot.cy - py;
+        const dsq = ddx * ddx + ddy * ddy;
 
         ctx.save();
         ctx.translate(ox, oy);
-        ctx.fillStyle = fillStyle;
+
+        if (dsq <= proxSq) {
+          const t = 1 - Math.sqrt(dsq) / proximity;
+          ctx.fillStyle = `rgb(${Math.round(baseRgb.r + dr * t)},${Math.round(baseRgb.g + dg * t)},${Math.round(baseRgb.b + db * t)})`;
+        } else {
+          ctx.fillStyle = baseColorStr;
+        }
+
         ctx.fill(circlePath);
         ctx.restore();
       }
@@ -181,22 +185,19 @@ const DotGrid = ({
 
     draw();
     return () => cancelAnimationFrame(rafId);
-  }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
+  }, [proximity, activeRgb, baseRgb, circlePath]);
 
-  // Build grid + resize
+  // Build grid + ResizeObserver
   useEffect(() => {
     buildGrid();
-    let ro: ResizeObserver | null = null;
-    if ('ResizeObserver' in window) {
-      ro = new ResizeObserver(buildGrid);
-      if (wrapperRef.current) ro.observe(wrapperRef.current);
-    } else {
-      window.addEventListener('resize', buildGrid);
+    const wrap = wrapperRef.current;
+    if (typeof ResizeObserver !== 'undefined' && wrap) {
+      const ro = new ResizeObserver(buildGrid);
+      ro.observe(wrap);
+      return () => ro.disconnect();
     }
-    return () => {
-      if (ro) ro.disconnect();
-      else window.removeEventListener('resize', buildGrid);
-    };
+    window.addEventListener('resize', buildGrid);
+    return () => window.removeEventListener('resize', buildGrid);
   }, [buildGrid]);
 
   // Mouse move + click interactions
@@ -205,10 +206,10 @@ const DotGrid = ({
       const now = performance.now();
       const pr = pointerRef.current;
       const dt = pr.lastTime ? now - pr.lastTime : 16;
-      const dx = e.clientX - pr.lastX;
-      const dy = e.clientY - pr.lastY;
-      let vx = (dx / dt) * 1000;
-      let vy = (dy / dt) * 1000;
+      const ddx = e.clientX - pr.lastX;
+      const ddy = e.clientY - pr.lastY;
+      let vx = (ddx / dt) * 1000;
+      let vy = (ddy / dt) * 1000;
       let speed = Math.hypot(vx, vy);
 
       if (speed > maxSpeed) {
@@ -221,8 +222,6 @@ const DotGrid = ({
       pr.lastTime = now;
       pr.lastX = e.clientX;
       pr.lastY = e.clientY;
-      pr.vx = vx;
-      pr.vy = vy;
       pr.speed = speed;
 
       const canvas = canvasRef.current;
@@ -231,24 +230,19 @@ const DotGrid = ({
       pr.x = e.clientX - rect.left;
       pr.y = e.clientY - rect.top;
 
-      // Push dots away when moving fast
       if (speed > speedTrigger) {
+        const resistanceFactor = Math.max(0.1, 1 - resistance / 5000);
+        const pushMag = Math.min(speed * 0.02 * resistanceFactor, dotSize * 4);
+
         for (const dot of dotsRef.current) {
           const dist = Math.hypot(dot.cx - pr.x, dot.cy - pr.y);
           if (dist < proximity && !dot._animating) {
             dot._animating = true;
             gsap.killTweensOf(dot);
-
-            // Resistance factor: heavier resistance means less push
-            const resistanceFactor = Math.max(0.1, 1 - resistance / 5000);
-            const pushMag = Math.min(speed * 0.02 * resistanceFactor, dotSize * 4);
             const angle = Math.atan2(dot.cy - pr.y, dot.cx - pr.x);
-            const pushX = Math.cos(angle) * pushMag;
-            const pushY = Math.sin(angle) * pushMag;
-
             gsap.to(dot, {
-              xOffset: pushX,
-              yOffset: pushY,
+              xOffset: Math.cos(angle) * pushMag,
+              yOffset: Math.sin(angle) * pushMag,
               duration: 0.15,
               ease: 'power3.out',
               onComplete: () => {
@@ -257,9 +251,7 @@ const DotGrid = ({
                   yOffset: 0,
                   duration: returnDuration,
                   ease: 'elastic.out(1, 0.75)',
-                  onComplete: () => {
-                    dot._animating = false;
-                  },
+                  onComplete: () => { dot._animating = false; },
                 });
               },
             });
@@ -280,14 +272,10 @@ const DotGrid = ({
         if (dist < shockRadius) {
           gsap.killTweensOf(dot);
           dot._animating = true;
-
           const falloff = Math.max(0, 1 - dist / shockRadius);
-          const pushX = (dot.cx - cx) * shockStrength * falloff * 0.5;
-          const pushY = (dot.cy - cy) * shockStrength * falloff * 0.5;
-
           gsap.to(dot, {
-            xOffset: pushX,
-            yOffset: pushY,
+            xOffset: (dot.cx - cx) * shockStrength * falloff * 0.5,
+            yOffset: (dot.cy - cy) * shockStrength * falloff * 0.5,
             duration: 0.2,
             ease: 'power4.out',
             onComplete: () => {
@@ -296,9 +284,7 @@ const DotGrid = ({
                 yOffset: 0,
                 duration: returnDuration,
                 ease: 'elastic.out(1, 0.75)',
-                onComplete: () => {
-                  dot._animating = false;
-                },
+                onComplete: () => { dot._animating = false; },
               });
             },
           });
@@ -306,11 +292,19 @@ const DotGrid = ({
       }
     };
 
-    const throttledMove = throttle(onMove, 16);
+    // Throttle to ~60fps — matches RAF cadence, prevents excess trig math
+    let lastCall = 0;
+    const throttledMove = (e: MouseEvent) => {
+      const now = performance.now();
+      if (now - lastCall >= 16) { lastCall = now; onMove(e); }
+    };
+
     window.addEventListener('mousemove', throttledMove, { passive: true });
     window.addEventListener('click', onClick);
 
     return () => {
+      // Kill all dot tweens to prevent post-unmount callbacks
+      for (const dot of dotsRef.current) gsap.killTweensOf(dot);
       window.removeEventListener('mousemove', throttledMove);
       window.removeEventListener('click', onClick);
     };

@@ -10,36 +10,49 @@ gsap.registerPlugin(useGSAP);
 export default function MouseFollowVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoWrapRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
     const video = videoRef.current;
-    if (!video) return;
+    const videoWrap = videoWrapRef.current;
+    if (!video || !videoWrap) return;
 
     // We'll use a proxy object to smooth out the targetTime
     const state = { currentTime: 0 };
     let lastSeekTime = 0;
     const throttleMs = 33; // Limit seeking to ~30fps to avoid overloading the decoder while remaining fluid
 
+    // Parallax strength — how many px the video shifts at screen edge
+    const PARALLAX_STRENGTH = 18;
+
     const handleMouseMove = (e: MouseEvent) => {
-      if (!video.duration) return;
+      // --- Video scrubbing ---
+      if (video.duration) {
+        const progress = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
+        gsap.to(state, {
+          currentTime: progress * video.duration,
+          duration: 0.6,
+          ease: "power1.out",
+          overwrite: "auto"
+        });
+      }
 
-      // 1. Scrubbing progress (0 to 1) based on X coordinate
-      const progress = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
-      const targetTime = progress * video.duration;
+      // --- Parallax ---
+      // Offset from center: -0.5 … +0.5
+      const offsetX = (e.clientX / window.innerWidth - 0.5) * PARALLAX_STRENGTH;
+      const offsetY = (e.clientY / window.innerHeight - 0.5) * PARALLAX_STRENGTH;
 
-      // Tween the proxy currentTime smoothly
-      gsap.to(state, {
-        currentTime: targetTime,
-        duration: 0.6,
-        ease: "power1.out",
+      gsap.to(videoWrap, {
+        x: offsetX,
+        y: offsetY,
+        duration: 1.2,
+        ease: "power2.out",
         overwrite: "auto"
       });
     };
 
     const updateVideoFrame = () => {
       const now = performance.now();
-      // Only set currentTime if enough time has passed since the last seek
-      // AND there's a meaningful change, bypassing the blocking video.seeking check.
       if (now - lastSeekTime > throttleMs && Math.abs(video.currentTime - state.currentTime) > 0.01) {
         video.currentTime = state.currentTime;
         lastSeekTime = now;
@@ -52,6 +65,9 @@ export default function MouseFollowVideo() {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       gsap.ticker.remove(updateVideoFrame);
+      // Kill any in-flight tweens to prevent post-unmount callbacks
+      gsap.killTweensOf(state);
+      gsap.killTweensOf(videoWrap);
     };
   }, { scope: containerRef });
 
@@ -61,13 +77,13 @@ export default function MouseFollowVideo() {
       {/* DotGrid background layer */}
       <div className="absolute inset-0 z-0">
         <DotGrid
-          dotSize={16}
-          gap={32}
+          dotSize={4}
+          gap={8}
           baseColor="#ffffff"
-          activeColor="#000000"
-          proximity={150}
+          activeColor="#999999"
+          proximity={70}
           speedTrigger={100}
-          shockRadius={250}
+          shockRadius={80}
           shockStrength={5}
           maxSpeed={5000}
           resistance={750}
@@ -76,7 +92,7 @@ export default function MouseFollowVideo() {
       </div>
 
       {/* Video on top — mix-blend-multiply makes white bg transparent, silhouette stays opaque */}
-      <div className="relative z-10 w-[50vw] aspect-[1920/1072] overflow-hidden pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
+      <div ref={videoWrapRef} className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[65vw] z-10 overflow-visible pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
         <video
           ref={videoRef}
           src="/lbm.mp4"
