@@ -1,7 +1,9 @@
-export default function Home() {
+import MouseFollowVideo from '../components/MouseFollowVideo';
+
+export default function Page() {
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold">Hello Next.js</h1>
+    <main className="w-screen h-screen flex items-center justify-center relative overflow-hidden">
+      <MouseFollowVideo />
     </main>
   );
 }
