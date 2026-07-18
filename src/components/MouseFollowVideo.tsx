@@ -20,7 +20,7 @@ export default function MouseFollowVideo() {
     const state = { currentTime: 0 };
     let lastSeekTime = 0;
     const throttleMs = 33;
-    const PARALLAX_STRENGTH = 14;
+    const PARALLAX_STRENGTH = 24;
 
     // Unified pointer handler — works for both mouse and touch
     const handlePointer = (clientX: number, clientY: number) => {

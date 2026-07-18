@@ -1,8 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap');
 @import "tailwindcss";
 
-body {
+/* ============================================================
+   DESIGN SYSTEM — CSS TOKENS
+   Source: DESIGN.md (Sections 2, 3, 4)
+   Style: Exaggerated Minimalism / White Digital Minimalism
+   ============================================================ */
+
+:root {
+  /* ----------------------------------------------------------
+     2. COLOR PALETTE
+     Monochromatic + single blue accent
+     ---------------------------------------------------------- */
+
+  /* Structural */
+  --color-background:   #FAFAFA;           /* Page background — sterile white */
+  --color-foreground:   #09090B;           /* Primary text */
+  --color-primary:      #18181B;           /* Headings, icons */
+  --color-on-primary:   #FFFFFF;           /* Text on dark surfaces */
+  --color-secondary:    #3F3F46;           /* Secondary text, dates */
+  --color-muted:        #E8ECF0;           /* Dividers, placeholder areas */
+  --color-border:       #E4E4E7;           /* Thin lines (0.5px), frames */
+
+  /* Accent — used ONLY for CTA and focus-states */
+  --color-accent:       #2563EB;
+  --color-accent-hover: #1D4ED8;
+
+  /* Three.js scene */
+  --color-particle:     #DCDCDC;           /* Particle color (platinum) */
+  --color-grid-line:    rgba(0, 0, 0, 0.04); /* Thin background grid */
+
+  /* States */
+  --color-destructive:  #DC2626;
+  --color-ring:         #18181B;           /* Outline on focus */
+
+  /* ----------------------------------------------------------
+     3. TYPOGRAPHY
+     Two-level font system: humanist grotesk + monospace
+     ---------------------------------------------------------- */
+
+  /* Font families */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body:    'Space Grotesk', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+
+  /* Type scale (clamp for responsiveness, 5:1 ratio H1:Body) */
+  --text-hero:    clamp(4rem, 10vw, 10rem);    /* Name, main heading */
+  --text-h1:      clamp(2.5rem, 5vw, 5rem);   /* Section headings */
+  --text-h2:      clamp(1.5rem, 3vw, 2.5rem);
+  --text-h3:      clamp(1.125rem, 2vw, 1.5rem);
+  --text-body:    1rem;                         /* 16px */
+  --text-sm:      0.875rem;                     /* 14px — secondary data */
+  --text-xs:      0.75rem;                      /* 12px — labels, statuses */
+
+  /* Text parameters */
+  --tracking-hero: -0.05em;   /* letter-spacing for oversized headings */
+  --tracking-ui:    0.05em;   /* tracking for monospace labels */
+  --leading-tight:  1.1;      /* For hero and H1 */
+  --leading-body:   1.6;      /* For body text */
+
+  /* ----------------------------------------------------------
+     4. SPACING SCALE
+     Spacious — density dial 3/10
+     ---------------------------------------------------------- */
+
+  --space-1:    4px;
+  --space-2:    8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-24:  96px;
+  --space-32: 128px;
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
   margin: 0;
-  background-color: #050505;
-  color: white;
-  overflow: hidden;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  /* overflow: hidden removed — native scroll is required for GSAP ScrollTrigger */
+}
+
+/* ============================================================
+   REDUCED MOTION
+   CSS layer — GSAP + Three.js handle their own logic in JS
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
