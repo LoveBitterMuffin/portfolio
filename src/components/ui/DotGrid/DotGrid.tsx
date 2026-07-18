@@ -108,7 +108,11 @@ const DotGrid = ({
     // Cache the context
     const ctx = canvas.getContext('2d');
     ctxRef.current = ctx;
-    if (ctx) ctx.scale(dpr, dpr);
+    if (ctx) {
+      // Reset transform before scaling — prevents cumulative dpr multiplication on resize/zoom
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+    }
 
     const cols = Math.floor((width + gap) / (dotSize + gap));
     const rows = Math.floor((height + gap) / (dotSize + gap));
@@ -187,22 +191,26 @@ const DotGrid = ({
     return () => cancelAnimationFrame(rafId);
   }, [proximity, activeRgb, baseRgb, circlePath]);
 
-  // Build grid + ResizeObserver
+  // Build grid + ResizeObserver + window resize (catches browser zoom / dpr changes)
   useEffect(() => {
     buildGrid();
     const wrap = wrapperRef.current;
+    let ro: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined' && wrap) {
-      const ro = new ResizeObserver(buildGrid);
+      ro = new ResizeObserver(buildGrid);
       ro.observe(wrap);
-      return () => ro.disconnect();
     }
+    // Always listen to window resize to catch zoom-level changes that alter devicePixelRatio
     window.addEventListener('resize', buildGrid);
-    return () => window.removeEventListener('resize', buildGrid);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', buildGrid);
+    };
   }, [buildGrid]);
 
-  // Mouse move + click interactions
+  // Mouse move + click / touch interactions (shared logic for mouse & touch)
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
+    const onPointerMove = (clientX: number, clientY: number) => {
       const now = performance.now();
       const pr = pointerRef.current;
       const dt = pr.lastTime ? now - pr.lastTime : 16;
@@ -220,15 +228,15 @@ const DotGrid = ({
       }
 
       pr.lastTime = now;
-      pr.lastX = e.clientX;
-      pr.lastY = e.clientY;
+      pr.lastX = clientX;
+      pr.lastY = clientY;
       pr.speed = speed;
 
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      pr.x = e.clientX - rect.left;
-      pr.y = e.clientY - rect.top;
+      pr.x = clientX - rect.left;
+      pr.y = clientY - rect.top;
 
       if (speed > speedTrigger) {
         const resistanceFactor = Math.max(0.1, 1 - resistance / 5000);
@@ -246,12 +254,15 @@ const DotGrid = ({
               duration: 0.15,
               ease: 'power3.out',
               onComplete: () => {
+                // Reset flag BEFORE starting return so the dot can be
+                // re-triggered by a new interaction without getting stuck
+                dot._animating = false;
                 gsap.to(dot, {
                   xOffset: 0,
                   yOffset: 0,
                   duration: returnDuration,
                   ease: 'elastic.out(1, 0.75)',
-                  onComplete: () => { dot._animating = false; },
+                  overwrite: 'auto',
                 });
               },
             });
@@ -260,12 +271,12 @@ const DotGrid = ({
       }
     };
 
-    const onClick = (e: MouseEvent) => {
+    const onShock = (clientX: number, clientY: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const cx = e.clientX - rect.left;
-      const cy = e.clientY - rect.top;
+      const cx = clientX - rect.left;
+      const cy = clientY - rect.top;
 
       for (const dot of dotsRef.current) {
         const dist = Math.hypot(dot.cx - cx, dot.cy - cy);
@@ -279,12 +290,17 @@ const DotGrid = ({
             duration: 0.2,
             ease: 'power4.out',
             onComplete: () => {
+              // Reset flag BEFORE return so dot can receive new interactions
+              // while elastic is still playing (safe because overwrite:'auto'
+              // lets GSAP handle any conflict gracefully)
+              dot._animating = false;
               gsap.to(dot, {
                 xOffset: 0,
                 yOffset: 0,
                 duration: returnDuration,
                 ease: 'elastic.out(1, 0.75)',
-                onComplete: () => { dot._animating = false; },
+                overwrite: 'auto',
+                // no onComplete needed — flag already reset above
               });
             },
           });
@@ -292,21 +308,29 @@ const DotGrid = ({
       }
     };
 
-    // Throttle to ~60fps — matches RAF cadence, prevents excess trig math
+    // Throttle to ~60fps
     let lastCall = 0;
-    const throttledMove = (e: MouseEvent) => {
+    const throttledMove = (clientX: number, clientY: number) => {
       const now = performance.now();
-      if (now - lastCall >= 16) { lastCall = now; onMove(e); }
+      if (now - lastCall >= 16) { lastCall = now; onPointerMove(clientX, clientY); }
     };
 
-    window.addEventListener('mousemove', throttledMove, { passive: true });
-    window.addEventListener('click', onClick);
+    const onMouseMove  = (e: MouseEvent) => throttledMove(e.clientX, e.clientY);
+    const onClick      = (e: MouseEvent) => onShock(e.clientX, e.clientY);
+    const onTouchMove  = (e: TouchEvent) => { const t = e.touches[0]; if (t) throttledMove(t.clientX, t.clientY); };
+    const onTouchStart = (e: TouchEvent) => { const t = e.touches[0]; if (t) onShock(t.clientX, t.clientY); };
+
+    window.addEventListener('mousemove',  onMouseMove,  { passive: true });
+    window.addEventListener('click',      onClick);
+    window.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
 
     return () => {
-      // Kill all dot tweens to prevent post-unmount callbacks
       for (const dot of dotsRef.current) gsap.killTweensOf(dot);
-      window.removeEventListener('mousemove', throttledMove);
-      window.removeEventListener('click', onClick);
+      window.removeEventListener('mousemove',  onMouseMove);
+      window.removeEventListener('click',      onClick);
+      window.removeEventListener('touchmove',  onTouchMove);
+      window.removeEventListener('touchstart', onTouchStart);
     };
   }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength, dotSize]);
 

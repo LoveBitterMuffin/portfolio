@@ -17,38 +17,40 @@ export default function MouseFollowVideo() {
     const videoWrap = videoWrapRef.current;
     if (!video || !videoWrap) return;
 
-    // We'll use a proxy object to smooth out the targetTime
     const state = { currentTime: 0 };
     let lastSeekTime = 0;
-    const throttleMs = 33; // Limit seeking to ~30fps to avoid overloading the decoder while remaining fluid
+    const throttleMs = 33;
+    const PARALLAX_STRENGTH = 14;
 
-    // Parallax strength — how many px the video shifts at screen edge
-    const PARALLAX_STRENGTH = 18;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      // --- Video scrubbing ---
+    // Unified pointer handler — works for both mouse and touch
+    const handlePointer = (clientX: number, clientY: number) => {
       if (video.duration) {
-        const progress = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
+        const progress = Math.max(0, Math.min(1, clientX / window.innerWidth));
         gsap.to(state, {
           currentTime: progress * video.duration,
           duration: 0.6,
-          ease: "power1.out",
-          overwrite: "auto"
+          ease: 'power1.out',
+          overwrite: 'auto',
         });
       }
 
-      // --- Parallax ---
-      // Offset from center: -0.5 … +0.5
-      const offsetX = (e.clientX / window.innerWidth - 0.5) * PARALLAX_STRENGTH;
-      const offsetY = (e.clientY / window.innerHeight - 0.5) * PARALLAX_STRENGTH;
+      const offsetX = (clientX / window.innerWidth - 0.5) * PARALLAX_STRENGTH;
+      const offsetY = (clientY / window.innerHeight - 0.5) * PARALLAX_STRENGTH;
 
       gsap.to(videoWrap, {
         x: offsetX,
         y: offsetY,
         duration: 1.2,
-        ease: "power2.out",
-        overwrite: "auto"
+        ease: 'power2.out',
+        overwrite: 'auto',
       });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => handlePointer(e.clientX, e.clientY);
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (t) handlePointer(t.clientX, t.clientY);
     };
 
     const updateVideoFrame = () => {
@@ -60,12 +62,13 @@ export default function MouseFollowVideo() {
     };
 
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
     gsap.ticker.add(updateVideoFrame);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
       gsap.ticker.remove(updateVideoFrame);
-      // Kill any in-flight tweens to prevent post-unmount callbacks
       gsap.killTweensOf(state);
       gsap.killTweensOf(videoWrap);
     };
@@ -92,7 +95,8 @@ export default function MouseFollowVideo() {
       </div>
 
       {/* Video on top — mix-blend-multiply makes white bg transparent, silhouette stays opaque */}
-      <div ref={videoWrapRef} className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[65vw] z-10 overflow-visible pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
+      {/* w-[75vw] on mobile → w-[38vw] on md+ desktops */}
+      <div ref={videoWrapRef} className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[75vw] md:w-[38vw] z-10 overflow-visible pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
         <video
           ref={videoRef}
           src="/lbm.mp4"
