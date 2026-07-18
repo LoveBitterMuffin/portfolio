@@ -96,7 +96,7 @@ export default function MouseFollowVideo() {
 
       {/* Video on top — mix-blend-multiply makes white bg transparent, silhouette stays opaque */}
       {/* w-[75vw] on mobile → w-[38vw] on md+ desktops */}
-      <div ref={videoWrapRef} className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[75vw] md:w-[38vw] z-10 overflow-visible pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
+      <div ref={videoWrapRef} className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[75vw] md:w-[38vw] z-10 overflow-visible pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
         <video
           ref={videoRef}
           src="/lbm.mp4"
