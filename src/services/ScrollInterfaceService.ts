@@ -1,7 +1,8 @@
 import { gsap } from 'gsap';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-gsap.registerPlugin(ScrollToPlugin);
+gsap.registerPlugin(ScrollToPlugin, ScrollTrigger);
 
 export interface ScrollState {
   /** 0–1 global scroll progress */
@@ -18,9 +19,9 @@ export class ScrollInterfaceService {
   private panels: HTMLElement[];
   private onSectionChange: (state: ScrollState) => void;
   private currentSectionIndex: number = 0;
-
-  // Plain scroll listener — no GSAP ScrollTrigger, it conflicts with CSS sticky
-  private handleScroll: () => void;
+  private parallaxElements: { el: HTMLElement; speed: number }[] = [];
+  
+  public scrollTween: gsap.core.Tween | undefined;
 
   constructor(
     wrapper: HTMLElement,
@@ -32,32 +33,49 @@ export class ScrollInterfaceService {
     this.track = track;
     this.panels = panels;
     this.onSectionChange = onSectionChange;
-    this.handleScroll = this.onScroll.bind(this);
     this.init();
   }
 
   private init(): void {
-    window.addEventListener('scroll', this.handleScroll, { passive: true });
+    // Collect all data-speed elements
+    const elements = document.querySelectorAll<HTMLElement>('[data-speed]');
+    this.parallaxElements = Array.from(elements).map(el => ({
+      el,
+      speed: parseFloat(el.getAttribute('data-speed') || '0')
+    }));
+
+    const totalPanels = this.panels.length;
+
+    this.scrollTween = gsap.to(this.track, {
+      xPercent: -100 * (totalPanels - 1),
+      ease: 'none',
+      scrollTrigger: {
+        trigger: this.wrapper,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1,
+        onUpdate: (self) => this.onScrollUpdate(self.progress)
+      }
+    });
+
     this.track.addEventListener('focusin', this.handleFocusIn);
     // Run once to set initial state
-    this.onScroll();
+    this.onScrollUpdate(0);
   }
 
-  private onScroll(): void {
+  private onScrollUpdate(globalProgress: number): void {
     const totalPanels = this.panels.length;
-    const wrapperTop = this.wrapper.offsetTop;
-    const wrapperHeight = this.wrapper.offsetHeight;
-    const viewportHeight = window.innerHeight;
 
-    // Scrollable distance = wrapper height minus one viewport height
-    const scrollableDistance = wrapperHeight - viewportHeight;
-    const scrolled = Math.max(0, window.scrollY - wrapperTop);
-    const globalProgress = Math.min(1, scrolled / scrollableDistance);
-
-    // Drive the horizontal track: xPercent goes 0 → -400% for 5 panels
-    gsap.set(this.track, {
-      xPercent: -100 * (totalPanels - 1) * globalProgress,
-    });
+    // Parallax logic
+    const totalWidth = window.innerWidth * (totalPanels - 1);
+    const currentX = totalWidth * globalProgress;
+    
+    for (let i = 0; i < this.parallaxElements.length; i++) {
+      const { el, speed } = this.parallaxElements[i];
+      // When speed > 0, element moves in the opposite direction of track scroll
+      // effectively moving slower than the track
+      gsap.set(el, { x: currentX * speed });
+    }
 
     const activeSection = Math.min(
       Math.floor(globalProgress * totalPanels),
@@ -103,7 +121,11 @@ export class ScrollInterfaceService {
   }
 
   public destroy(): void {
-    window.removeEventListener('scroll', this.handleScroll);
+    if (this.scrollTween) {
+      this.scrollTween.scrollTrigger?.kill();
+      this.scrollTween.kill();
+    }
     this.track.removeEventListener('focusin', this.handleFocusIn);
   }
 }
+

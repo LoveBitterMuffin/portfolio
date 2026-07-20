@@ -1,0 +1,102 @@
+{
+  "intro": {
+    "title": "Dmitry\nVolkov",
+    "subtitle": "FULL-STACK DEVELOPER & DEVSECOPS ENGINEER",
+    "tagline": "Архитектура безопасности. Эстетика кода. Педагогика будущего.",
+    "cta": "Исследовать систему"
+  },
+  "education": {
+    "header": "ОБРАЗОВАНИЕ // ACADEMIC BACKGROUND",
+    "items": [
+      {
+        "institution": "МТУСИ им. Ордена Красного Знамени",
+        "specialty": "DevSecOps Engineering",
+        "description": "Глубокая инженерная подготовка в области безопасной разработки, оркестрации контейнеров и защиты инфраструктуры. Синтез Linux-администрирования и практик CI/CD.",
+        "logo": "/logo_color_mtuci.svg"
+      },
+      {
+        "institution": "Московский городской педагогический университет (МГПУ)",
+        "specialty": "Коррекционная педагогика",
+        "description": "Навыки адаптивной коммуникации. Умение декомпозировать сложные технические концепции для аудитории с разным уровнем подготовки.",
+        "logo": "/mgpu-brandbook-14.png"
+      },
+      {
+        "institution": "Колледж",
+        "specialty": "Оператор электронного набора и вёрстки",
+        "description": "Фундаментальная база в полиграфическом дизайне, работе с Adobe Illustrator, Photoshop и принципах композиционной верстки."
+      }
+    ]
+  },
+  "experience": {
+    "header": "ОПЫТ // PROFESSIONAL TRAJECTORY",
+    "items": [
+      {
+        "role": "Педагог дополнительного образования",
+        "place": "ГБОУ ДО ДТДиМ \"Севастополец\"",
+        "period": "202X – Наст. время",
+        "details": [
+          "Frontend-мастерская: React, Next.js, Tailwind CSS.",
+          "Backend-мастерская: Node.js, базы данных, API.",
+          "Кружки: Визуальное программирование, ИИ в действии, Компьютерная грамотность."
+        ],
+        "focus": ""
+      },
+      {
+        "role": "Репетитор ЕГЭ по информатике",
+        "focus": "Подготовка к экзаменам, алгоритмизация, разбор задач высокой сложности.",
+        "place": "",
+        "period": "",
+        "details": []
+      },
+      {
+        "role": "Freelance Web Developer",
+        "focus": "Полный цикл разработки веб-приложений. От прототипа в Figma до деплоя на Kubernetes. Оптимизация Core Web Vitals, SEO-аудит, автоматизация тестирования.",
+        "place": "",
+        "period": "",
+        "details": []
+      }
+    ]
+  },
+  "about": {
+    "header": "НАВЫКИ // TECHNICAL ARSENAL",
+    "skills": {
+      "frontend": {
+        "title": "Frontend Core",
+        "items": [
+          "Frameworks: React, Next.js, Angular",
+          "Styling: Tailwind CSS, Vanilla Adaptive Layouts",
+          "Animation: GSAP, Three.js, Framer Motion",
+          "Design Tools: Figma, Adobe Illustrator, Photoshop, Premiere"
+        ]
+      },
+      "backend": {
+        "title": "Backend & DevSecOps",
+        "items": [
+          "Infrastructure: Docker, Kubernetes, Linux (Ubuntu/CentOS/Alpine)",
+          "Security: OWASP Top 10 mitigation, TLS, JWT, Secrets Management (Vault)",
+          "CI/CD: GitHub Actions, GitLab CI, Automated Testing (Jest, Cypress)",
+          "Optimization: SEO, Page Speed Optimization, Lazy Loading strategies"
+        ]
+      },
+      "soft": {
+        "title": "Soft Skills",
+        "items": [
+          "Преподавание и менторство",
+          "Адаптивная коммуникация",
+          "Аналитическое мышление"
+        ]
+      }
+    },
+    "bio": "Я объединяю строгость инженерной безопасности с гибкостью современного фронтенда. Мой подход — это не просто написание кода, а создание отказоустойчивых, быстрых и визуально совершенных цифровых продуктов. Опыт в педагогике позволяет мне видеть проект глазами пользователя, а бэкграунд в DevSecOps гарантирует его надежность."
+  },
+  "contacts": {
+    "header": "СВЯЗЬ // INITIATE CONNECTION",
+    "email": "volkov.dmitry.dev@example.com",
+    "social": [
+      { "name": "GitHub", "url": "https://github.com/LoveBitterMuffin", "icon": "github" },
+      { "name": "LinkedIn", "url": "https://linkedin.com/in/dmitry-volkov-dev", "icon": "linkedin" },
+      { "name": "Telegram", "url": "https://t.me/LoveBitterMuffin", "icon": "telegram" }
+    ],
+    "footer": "© 2026 Dmitry Volkov. Built with Next.js, GSAP & Three.js. System Status: ONLINE"
+  }
+}

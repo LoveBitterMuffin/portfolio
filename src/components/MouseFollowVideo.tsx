@@ -1,49 +1,27 @@
 "use client";
 
-import { useRef } from 'react';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
+import { useRef, useState, useEffect } from 'react';
 import DotGrid from './ui/DotGrid/DotGrid';
-
-gsap.registerPlugin(useGSAP);
+import { VideoInteractionService } from '../services/VideoInteractionService';
 
 export default function MouseFollowVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  
+  const [useFallback, setUseFallback] = useState(false);
 
-  useGSAP(() => {
+  useEffect(() => {
     const video = videoRef.current;
     const videoWrap = videoWrapRef.current;
     if (!video || !videoWrap) return;
 
-    const state = { currentTime: 0 };
-    let lastSeekTime = 0;
-    const throttleMs = 33;
-    const PARALLAX_STRENGTH = 24;
+    const service = new VideoInteractionService(video, videoWrap, () => {
+      setUseFallback(true);
+    });
 
-    // Unified pointer handler — works for both mouse and touch
     const handlePointer = (clientX: number, clientY: number) => {
-      if (video.duration) {
-        const progress = Math.max(0, Math.min(1, clientX / window.innerWidth));
-        gsap.to(state, {
-          currentTime: progress * video.duration,
-          duration: 0.6,
-          ease: 'power1.out',
-          overwrite: 'auto',
-        });
-      }
-
-      const offsetX = (clientX / window.innerWidth - 0.5) * PARALLAX_STRENGTH;
-      const offsetY = (clientY / window.innerHeight - 0.5) * PARALLAX_STRENGTH;
-
-      gsap.to(videoWrap, {
-        x: offsetX,
-        y: offsetY,
-        duration: 1.2,
-        ease: 'power2.out',
-        overwrite: 'auto',
-      });
+      service.updatePointer(clientX, clientY);
     };
 
     const handleMouseMove = (e: MouseEvent) => handlePointer(e.clientX, e.clientY);
@@ -53,26 +31,15 @@ export default function MouseFollowVideo() {
       if (t) handlePointer(t.clientX, t.clientY);
     };
 
-    const updateVideoFrame = () => {
-      const now = performance.now();
-      if (now - lastSeekTime > throttleMs && Math.abs(video.currentTime - state.currentTime) > 0.01) {
-        video.currentTime = state.currentTime;
-        lastSeekTime = now;
-      }
-    };
-
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    gsap.ticker.add(updateVideoFrame);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
-      gsap.ticker.remove(updateVideoFrame);
-      gsap.killTweensOf(state);
-      gsap.killTweensOf(videoWrap);
+      service.destroy();
     };
-  }, { scope: containerRef });
+  }, []);
 
   return (
     <div ref={containerRef} className="relative w-full h-full flex items-center justify-center overflow-hidden bg-white">
@@ -97,14 +64,18 @@ export default function MouseFollowVideo() {
       {/* Video on top — mix-blend-multiply makes white bg transparent, silhouette stays opaque */}
       {/* w-[75vw] on mobile → w-[38vw] on md+ desktops */}
       <div ref={videoWrapRef} className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[75vw] md:w-[38vw] z-10 overflow-visible pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
-        <video
-          ref={videoRef}
-          src="/lbm.mp4"
-          className="w-full h-full object-cover"
-          muted
-          playsInline
-          preload="auto"
-        />
+        {useFallback ? (
+          <img src="/lbm_fallback.png" alt="Silhouette Fallback" className="w-full h-full object-cover" />
+        ) : (
+          <video
+            ref={videoRef}
+            src="/lbm.mp4"
+            className="w-full h-full object-cover"
+            muted
+            playsInline
+            preload="auto"
+          />
+        )}
       </div>
 
     </div>

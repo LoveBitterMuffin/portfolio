@@ -45,7 +45,7 @@
   --font-mono:    'JetBrains Mono', 'Courier New', monospace;
 
   /* Type scale (clamp for responsiveness, 5:1 ratio H1:Body) */
-  --text-hero:    clamp(4rem, 10vw, 10rem);    /* Name, main heading */
+  --text-hero:    clamp(3rem, 8vw, 10rem);     /* Name, main heading — mobile-first */
   --text-h1:      clamp(2.5rem, 5vw, 5rem);   /* Section headings */
   --text-h2:      clamp(1.5rem, 3vw, 2.5rem);
   --text-h3:      clamp(1.125rem, 2vw, 1.5rem);
@@ -115,5 +115,55 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE LAYOUT OVERRIDES
+   On mobile (<768px) the horizontal track is replaced by a
+   normal vertical document flow.
+   ============================================================ */
+
+/* Mobile: panels behave as normal block sections */
+@media (max-width: 767px) {
+  /* Horizontal scroll wrapper becomes auto-height */
+  #scroll-wrapper {
+    height: auto !important;
+  }
+
+  /* Sticky viewport is released */
+  #viewport {
+    position: relative !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Track becomes a vertical flex container */
+  #horizontal-track {
+    flex-direction: column !important;
+    width: 100% !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* Each panel fills viewport height on mobile */
+  .panel {
+    width: 100% !important;
+    min-height: 100svh;
+    height: auto !important;
+    padding: var(--space-8) var(--space-6) !important;
+  }
+
+  /* Intro panel specifics */
+  #intro {
+    min-height: 100svh;
+  }
+}
+
+/* Tablet and up: restore horizontal layout */
+@media (min-width: 768px) {
+  .panel {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-12);
   }
 }

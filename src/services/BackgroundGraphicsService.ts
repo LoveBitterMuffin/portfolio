@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
+import { detectLowEndDevice } from '../utils/detectLowEndDevice';
 
 const vertexShader = `
 uniform float uTime;
@@ -69,7 +70,7 @@ export class BackgroundGraphicsService {
     this.canvas = canvas;
 
     this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.particlesCount = this.detectLowEndDevice() ? 300 : 1000;
+    this.particlesCount = detectLowEndDevice() ? 300 : 1000;
     this.positions = new Array(this.SECTIONS_COUNT);
 
     this.init();
@@ -83,13 +84,6 @@ export class BackgroundGraphicsService {
     document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
-  private detectLowEndDevice(): boolean {
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nav = navigator as any;
-    const lowMemory = nav.deviceMemory !== undefined && nav.deviceMemory < 4;
-    return isMobile || lowMemory;
-  }
 
   private init() {
     const width = this.container.clientWidth;
