@@ -454,91 +454,72 @@ export default function Page() {
           </div>
         </section>
 
-        {/* Section 4 — Services (Interactive OptionWheel Controller) */}
+        {/* Section 4 — Services */}
         <section
           id="services"
-          className="min-h-screen flex flex-col justify-center relative overflow-hidden py-16"
+          className="min-h-screen flex items-center relative overflow-hidden py-20"
           style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
         >
-          <div className="w-full max-w-6xl mx-auto">
+          <div className="w-full max-w-5xl mx-auto">
             <p className="font-mono text-xs mb-4 tracking-widest uppercase text-secondary animate-entrance">
               [STEP.03/05] — Services & Solutions
             </p>
-            <h2 className="font-display font-bold uppercase mb-12 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
+            <h2 className="font-display font-bold uppercase mb-16 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
               {contentData.services.header}
             </h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-              {/* Left Column: Interactive OptionWheel */}
-              <div className="lg:col-span-5 h-[380px] sm:h-[420px] relative rounded-2xl border border-border/40 bg-surface/20 backdrop-blur-md overflow-hidden flex items-center shadow-2xl">
-                <OptionWheel
-                  items={contentData.services.items.map((item) => item.title)}
-                  defaultSelected={0}
-                  onChange={(index) => setActiveServiceIndex(index)}
-                  side="left"
-                  fontSize={isMobile ? 1.2 : 1.5}
-                  curve={1.1}
-                  tilt={7}
-                  inset={isMobile ? 24 : 40}
-                />
-              </div>
-
-              {/* Right Column: Dynamic Service Detail Card */}
-              <div className="lg:col-span-7 flex flex-col justify-between min-h-[380px] rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 sm:p-10 shadow-2xl transition-all duration-300">
-                {contentData.services.items[activeServiceIndex] && (
-                  <div className="flex flex-col justify-between h-full">
-                    <div>
-                      <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
-                        <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
-                          [SERVICE.0{activeServiceIndex + 1} / 0{contentData.services.items.length}]
-                        </span>
-                        <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
-                          {contentData.services.items[activeServiceIndex].price}
-                        </span>
-                      </div>
-
-                      <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-primary mb-2">
-                        {contentData.services.items[activeServiceIndex].title}
-                      </h3>
-                      <p className="font-mono text-xs text-accent uppercase tracking-wider mb-6">
-                        {contentData.services.items[activeServiceIndex].subtitle}
-                      </p>
-
-                      <p className="font-body text-base text-secondary leading-relaxed mb-8">
-                        {contentData.services.items[activeServiceIndex].description}
-                      </p>
-
-                      <div className="mb-8">
-                        <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80 mb-3 font-semibold">
-                          Ключевые результаты / Deliverables:
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {contentData.services.items[activeServiceIndex].deliverables.map((item, idx) => (
-                            <span
-                              key={idx}
-                              className="font-mono text-xs px-3 py-1.5 rounded-sm border border-border/60 bg-surface/80 text-primary"
-                            >
-                              ✓ {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+              {contentData.services.items.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40 group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
+                      <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
+                        [0{idx + 1} / 0{contentData.services.items.length}]
+                      </span>
+                      <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
+                        {item.price}
+                      </span>
                     </div>
 
-                    <div className="pt-6 border-t border-border/40 flex items-center justify-between mt-4">
-                      <span className="font-mono text-xs text-secondary">
-                        CONTROLLER: OPTIONWHEEL ACTIVE
-                      </span>
-                      <a
-                        href="#contacts"
-                        className="font-mono text-xs uppercase tracking-wider px-5 py-2.5 rounded border border-accent bg-accent/10 text-primary hover:bg-accent hover:text-black transition-all duration-200 font-semibold"
-                      >
-                        Запросить расчет →
-                      </a>
+                    <h3 className="font-display text-2xl font-bold uppercase text-primary mb-2 group-hover:text-accent transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="font-mono text-xs text-accent uppercase tracking-wider mb-4">
+                      {item.subtitle}
+                    </p>
+
+                    <p className="font-body text-sm text-secondary leading-relaxed mb-6">
+                      {item.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {item.deliverables.map((deliv, dIdx) => (
+                        <span
+                          key={dIdx}
+                          className="font-mono text-[11px] px-2.5 py-1 rounded-sm border border-border/50 bg-surface/60 text-primary/90"
+                        >
+                          ✓ {deliv}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                )}
-              </div>
+
+                  <div className="pt-4 border-t border-border/40 flex items-center justify-between">
+                    <span className="font-mono text-[11px] text-secondary uppercase tracking-wider">
+                      {item.id}
+                    </span>
+                    <a
+                      href="#contacts"
+                      className="font-mono text-xs uppercase text-accent group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 font-semibold"
+                    >
+                      Заказать →
+                    </a>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -773,6 +754,31 @@ export default function Page() {
 
       {/* ── Fixed Scroll Progress Indicator ──────────────────────────────── */}
       <ScrollProgressIndicator progress={0} activeSection={activeSection} />
+
+      {/* ── Global Side HUD Controller (OptionWheel Штурвал Навигации) ──────── */}
+      <div
+        className="fixed right-4 top-1/2 -translate-y-1/2 w-[240px] sm:w-[280px] h-[360px] z-40 pointer-events-none hidden md:block"
+        aria-label="Navigation Wheel HUD"
+      >
+        <div className="w-full h-full relative pointer-events-auto rounded-l-2xl border-l border-y border-border/30 bg-black/40 backdrop-blur-md overflow-hidden flex items-center shadow-2xl">
+          <OptionWheel
+            items={[...SECTIONS]}
+            defaultSelected={0}
+            selected={activeSection >= 0 ? activeSection : 0}
+            onChange={(index) => {
+              if (index !== activeSectionRef.current) {
+                handleNavClick(index);
+              }
+            }}
+            side="right"
+            fontSize={1.3}
+            curve={1.3}
+            tilt={10}
+            inset={24}
+            wheelPassthrough={true}
+          />
+        </div>
+      </div>
     </>
   );
 }
