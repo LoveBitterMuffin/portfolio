@@ -71,8 +71,7 @@ void main() {
         vec3 blue = vec3(0.23, 0.51, 0.96); // #3B82F6
         vec3 red = vec3(0.93, 0.26, 0.26);  // #EF4444
         vec3 pillColor = vTargetPos.x < 0.0 ? blue : red;
-        vec3 mixedPillColor = mix(uColor, pillColor, uMorphProgress);
-        finalColor = mix(uColor, mixedPillColor, uPillMode);
+        finalColor = mix(uColor, pillColor, uPillMode);
     }
 
     if (vIsDust > 0.5) {
