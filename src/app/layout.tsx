@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { SkipLink } from '../components/SkipLink';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { CookieConsent } from '../components/CookieConsent';
 
 export const metadata: Metadata = {
   title: 'Дмитрий Волков — Full-Stack Developer & DevSecOps Engineer',
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeProvider>
           <SkipLink />
           <main id="main-content">{children}</main>
+          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>
