@@ -311,6 +311,13 @@ const OptionWheel = ({
       onPointerCancel={handlePointerEnd}
       onKeyDown={handleKeyDown}
     >
+      {/* 1px contour guide rings backdrop */}
+      <div className="option-wheel__ring-backdrop" aria-hidden="true">
+        <div className="option-wheel__ring option-wheel__ring--1" />
+        <div className="option-wheel__ring option-wheel__ring--2" />
+        <div className="option-wheel__ring option-wheel__ring--3" />
+      </div>
+
       {items.map((label, index) => (
         <div
           key={`${label}-${index}`}
