@@ -1,131 +1,62 @@
-# OptionWheel Navigation & Dynamic Services Inspection Card Design
+# OptionWheel Global Side HUD Navigation Design Specification
 
 ## Overview
-This design specification details the integration of the `OptionWheel` component as a central interactive controller within the `Services` section of the portfolio (`src/app/page.tsx`). It adheres to the **Void Aesthetic** (pure `#000000` background, 1px contour outlines, 15% opacity rings, minimal typography) and provides a dynamic side-by-side (or responsive stacked) inspection panel that updates in real time as the user rotates or clicks items on the wheel.
+This design specification defines the implementation of `OptionWheel` as a **Global Side HUD Controller ("Штурвал навигации")** across the entire website. 
+
+Instead of replacing inline content within a single section, `OptionWheel` is anchored to the right side of the screen as a fixed, non-intrusive interactive controller. It provides bi-directional synchronization with the site's vertical/horizontal scrolling sections, while preserving the full horizontal scroll experience in `About` and the rich card representation in `Services`.
 
 ---
 
-## 1. Design & Aesthetic System (Void Aesthetic)
+## 1. Architecture & Aesthetic Guidelines (Void Aesthetic)
 
-### Visual Token & Styling Guidelines
-- **Background**: Pure `#000000` void canvas.
-- **Rings & Contours**: 1px thin geometric circles/rings behind the wheel rendered with `rgba(255, 255, 255, 0.15)` outline.
-- **Inactive Items**: `color: #a6a6a6`, low font-weight (200), subtle spatial blur (`blur(2px)`) and fade.
-- **Active / Selected Item**: `color: #ffffff`, font-weight (500), crisp zero-blur, illuminated with subtle primary accent highlight.
-- **Clean UI**: Stripped of legacy gray panels, gradient backgrounds, or bulky borders.
+### Visual HUD Styling
+- **Position**: `fixed`, pinned to the right edge (`right-0`, vertically centered `top-1/2 -translate-y-1/2`).
+- **Container**: `w-[260px] h-[360px] z-40 pointer-events-auto hidden md:flex`.
+- **Background**: Pure `#000000` / transparent backdrop with 1px contour concentric guide rings (`rgba(255, 255, 255, 0.12)`).
+- **Typography & Items**: Navigational sections: `['About', 'Experience', 'Services', 'Education', 'Contacts']`.
+- **Selected Accent**: Crisp `#ffffff` text with zero blur, subtle HSL glow, and low-opacity blur on inactive section labels (`#a6a6a6`).
 
 ---
 
-## 2. Component Architecture & Data Flow
+## 2. Bi-Directional Synchronization Logic
 
-### Data Structure (`src/data/content.json`)
-The services array in `src/data/content.json` is structured into detailed service offerings:
-
-```json
-{
-  "services": {
-    "header": "УСЛУГИ & ТЕХНОЛОГИЧЕСКИЙ СТЕК // SERVICES & SOLUTIONS",
-    "items": [
-      {
-        "id": "web-dev",
-        "title": "Web Development & Web Engines",
-        "subtitle": "Высоконагруженные веб-приложения & SPA",
-        "description": "Проектирование и разработка современных веб-сервисов с акцентом на скорость, SEO и отзывчивость.",
-        "deliverables": ["Next.js / React Architecture", "GSAP & Three.js 3D/FX", "Core Web Vitals 95+"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "devsecops",
-        "title": "DevSecOps & Cloud Infrastructure",
-        "subtitle": "Оркестрация, безопасность & CI/CD",
-        "description": "Построение надежных CI/CD пайплайнов, контейнеризация приложений и зашифрованное управление секретами.",
-        "deliverables": ["Kubernetes & Docker Swarm", "GitLab CI / GitHub Actions", "Vault & Secrets Management"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "security-audit",
-        "title": "Security Audit & Code Review",
-        "subtitle": "Аудит по OWASP Top 10",
-        "description": "Комплексный анализ исходного кода, выявление уязвимостей и повышение устойчивости инфраструктуры.",
-        "deliverables": ["Static/Dynamic Analysis (SAST/DAST)", "OWASP Compliance", "План ликвидации угроз"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "interactive-3d",
-        "title": "Interactive 3D & Canvas FX",
-        "subtitle": "Three.js & WebGL рендеринг",
-        "description": "Интерактивные 3D-сцены, генеративные частицы и кастомные шейдеры для премиального UX.",
-        "deliverables": ["Custom WebGL Shaders", "GSAP ScrollTrigger sync", "GPU Optimization"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "consulting",
-        "title": "Technical Consulting & Mentorship",
-        "subtitle": "Архитектурный консалтинг",
-        "description": "Экспертное сопровождение команд, аудит архитектурных решений и менторство разработчиков.",
-        "deliverables": ["Code Review", "Инфраструктурная карта", "Обучение команды"],
-        "price": "по договоренности"
-      }
-    ]
-  }
-}
+```
+   [User Scrolls Page]  ──────IntersectionObserver─────>  Update OptionWheel Active Index
+                                                                   │
+                                                                   ▼
+[User Rotates / Clicks Wheel] ────scrollIntoView()──────> Smooth Scroll to Target Section
 ```
 
----
+1. **Page Scroll -> Wheel Rotation**:
+   - The existing `IntersectionObserver` in `src/app/page.tsx` detects section entry (`about`, `experience`, `services`, `education`, `contacts`).
+   - Updates `activeSection` state index (0 to 4).
+   - `OptionWheel` receives prop or imperatively syncs position target so the wheel rotates smoothly to match page progress.
 
-## 3. OptionWheel Component Refactoring (`src/components/OptionWheel.jsx` & `OptionWheel.css`)
-
-### Changes in `OptionWheel.jsx`:
-1. **Background Contour Rings**: Add SVG/CSS concentric 1px guide rings centered within the wheel container with `15%` opacity.
-2. **Refined Props**:
-   - `textColor`: `#a6a6a6`
-   - `activeColor`: `#ffffff`
-   - `fontSize`: `1.8rem` (scaled for multi-line / desktop balance)
-   - `spacing`: `1.5`
-   - `curve`: `1.1`
-   - `tilt`: `8`
-   - `wheelPassthrough`: `false` (in Services section, scrolling/dragging wheel directly switches items smoothly without breaking page vertical scroll when inside the section).
-
-### Changes in `OptionWheel.css`:
-1. Use `#000000` void aesthetic styling with 1px contour guides.
-2. Ensure touch-action and pointer events are handled seamlessly without layout jumps.
-3. Added focus-visible accessibility outlines for keyboard navigation.
+2. **Wheel Interaction -> Page Scroll**:
+   - When the user drags, rotates mousewheel, or clicks an item on the `OptionWheel`, its `onChange(index)` callback fires.
+   - Calls `handleNavClick(index)` which smoothly scrolls the viewport to `SECTIONS[index]` (`#about`, `#experience`, etc.).
 
 ---
 
-## 4. Services Section Integration (`src/app/page.tsx`)
+## 3. Section Adjustments (`src/app/page.tsx`)
 
-### Layout (`#services` section):
-- **Desktop Layout (≥ 1024px)**:
-  - 2-column grid (`grid-cols-12`):
-    - Left Column (`col-span-5` or `col-span-6`): `OptionWheel` container with 1px contour backdrop.
-    - Right Column (`col-span-7` or `col-span-6`): Dynamic Service Inspection Card (`glassmorphism / void card` with 1px border, backdrop-blur, title, subtitle, description list, price badge, and CTA button).
-- **Mobile / Tablet Layout (< 1024px)**:
-  - Stacked layout: OptionWheel on top with height ~320px, followed by the selected service card below.
+### Services Section (`#services`)
+- Restored to a clean, highly readable layout displaying all services cards with deliverables, prices, and CTA buttons without replacing them with the wheel inside the section.
 
-### Interactive State Sync:
-```tsx
-const [selectedServiceIndex, setSelectedServiceIndex] = useState(0);
+### About Section (`#about`)
+- Horizontal scroll track is fully preserved with Three.js geometry morphing.
 
-// Handled via OptionWheel onChange callback:
-<OptionWheel
-  items={servicesItems.map(s => s.title)}
-  defaultSelected={0}
-  onChange={(index) => setSelectedServiceIndex(index)}
-  side="left"
-  fontSize={isMobile ? 1.4 : 1.8}
-  curve={1.2}
-/>
-```
+### Header Streamlining
+- The fixed Header retains logo and CTA, seamlessly delegating section tracking to the floating `OptionWheel` HUD.
 
 ---
 
-## 5. Verification Plan
+## 4. Verification Plan
 
-### Automated Verification:
-- Build check: `npm run build` to verify Next.js TypeScript compilation and JSX component resolution.
+### Automated Verification
+- Next.js production build check (`npm run build`) to ensure 0 build errors.
 
-### Manual Verification:
-- Rotate wheel via mouse drag, touchpad scroll, direct item clicks, and keyboard arrow keys.
-- Confirm dynamic card update with zero lag.
-- Check 1px contour ring aesthetics and `#000000` void background styling on dark mode.
+### Manual Verification
+- Scroll down the page vertically: confirm `OptionWheel` rotates in real-time to highlight active section.
+- Click / rotate items on `OptionWheel`: confirm viewport smoothly scrolls to target section.
+- Verify horizontal scroll track in `About` section works uninterrupted.
