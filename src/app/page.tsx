@@ -301,7 +301,7 @@ export default function Page() {
                 {/* Card 1 — Bio & Vision */}
                 <div
                   ref={setAboutItemRef(0)}
-                  className="scroll-item min-w-[320px] w-[80vw] max-w-[500px] flex-none rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 md:p-10 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40"
+                  className="scroll-item min-w-[320px] w-[80vw] max-w-[500px] flex-none border-y border-border/30 py-6 md:py-8 flex flex-col justify-between transition-all duration-300"
                   data-speed="0.1"
                 >
                   <div>
@@ -332,7 +332,7 @@ export default function Page() {
                 {/* Card 2 — Skills & Tech Stack */}
                 <div
                   ref={setAboutItemRef(1)}
-                  className="scroll-item min-w-[360px] w-[85vw] max-w-[620px] flex-none rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 md:p-10 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40"
+                  className="scroll-item min-w-[360px] w-[85vw] max-w-[620px] flex-none border-y border-border/30 py-6 md:py-8 flex flex-col justify-between transition-all duration-300"
                   data-speed="0.25"
                 >
                   <div>
@@ -374,7 +374,7 @@ export default function Page() {
                 {/* Card 3 — Profile & Visual Frame */}
                 <div
                   ref={setAboutItemRef(2)}
-                  className="scroll-item min-w-[300px] w-[80vw] max-w-[480px] flex-none rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 md:p-10 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40"
+                  className="scroll-item min-w-[300px] w-[80vw] max-w-[480px] flex-none border-y border-border/30 py-6 md:py-8 flex flex-col justify-between transition-all duration-300"
                   data-speed="0.4"
                 >
                   <div>
@@ -472,7 +472,7 @@ export default function Page() {
               {contentData.services.items.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  className="rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40 group"
+                  className="border-b border-border/30 pb-8 flex flex-col justify-between group transition-all duration-300"
                 >
                   <div>
                     <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
