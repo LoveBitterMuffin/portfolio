@@ -16,10 +16,36 @@ const DEFAULT_ITEMS = [
   'Drum & Bass'
 ];
 
+/**
+ * @param {Object} props
+ * @param {string[]} [props.items]
+ * @param {number} [props.defaultSelected]
+ * @param {number|null} [props.selected]
+ * @param {(index: number, item: string) => void} [props.onChange]
+ * @param {(index: number, item: string) => void} [props.onItemClick]
+ * @param {string} [props.textColor]
+ * @param {string} [props.activeColor]
+ * @param {string} [props.side]
+ * @param {number} [props.fontSize]
+ * @param {number} [props.spacing]
+ * @param {number} [props.curve]
+ * @param {number} [props.tilt]
+ * @param {number} [props.blur]
+ * @param {number} [props.fade]
+ * @param {number} [props.minOpacity]
+ * @param {number} [props.smoothing]
+ * @param {number} [props.inset]
+ * @param {boolean} [props.loop]
+ * @param {boolean} [props.draggable]
+ * @param {string} [props.soundUrl]
+ * @param {number} [props.soundVolume]
+ * @param {boolean} [props.wheelPassthrough]
+ * @param {string} [props.className]
+ */
 const OptionWheel = ({
   items = DEFAULT_ITEMS,
   defaultSelected = 3,
-  selected = null,
+  selected = /** @type {number|null} */ (null),
   onChange = (index, item) => {},
   onItemClick = (index, item) => {},
   textColor = '#a6a6a6',
