@@ -87,20 +87,22 @@ void main() {
 // Section Accent Color Palettes (Light & Dark Theme Hexes)
 const SECTION_COLORS_LIGHT = [
   0xDCDCDC, // 0: Intro (Platinum Grey)
-  0x6366F1, // 1: Education (Royal Indigo)
-  0x10B981, // 2: Experience (Emerald Green)
-  0xF59E0B, // 3: About (Golden Amber)
+  0xE879F9, // 1: Promo (Fuchsia / Cosmic)
+  0xF59E0B, // 2: About (Golden Amber)
+  0x10B981, // 3: Experience (Emerald Green)
   0x06B6D4, // 4: Services (Electric Cyan)
-  0x8B5CF6, // 5: Contacts (Violet Purple)
+  0x6366F1, // 5: Education (Royal Indigo)
+  0x8B5CF6, // 6: Contacts (Violet Purple)
 ];
 
 const SECTION_COLORS_DARK = [
   0x52525B, // 0: Intro (Zinc Grey)
-  0x818CF8, // 1: Education (Bright Indigo)
-  0x34D399, // 2: Experience (Bright Emerald)
-  0xFBBF24, // 3: About (Bright Amber)
+  0xD946EF, // 1: Promo (Bright Fuchsia / Cosmic)
+  0xFBBF24, // 2: About (Bright Amber)
+  0x34D399, // 3: Experience (Bright Emerald)
   0x22D3EE, // 4: Services (Bright Cyan)
-  0xA78BFA, // 5: Contacts (Bright Violet)
+  0x818CF8, // 5: Education (Bright Indigo)
+  0xA78BFA, // 6: Contacts (Bright Violet)
 ];
 
 export class BackgroundGraphicsService {
@@ -123,7 +125,7 @@ export class BackgroundGraphicsService {
   private particleMaterial!: THREE.ShaderMaterial;
   private particlePoints!: THREE.Points;
 
-  private readonly SECTIONS_COUNT = 6;
+  private readonly SECTIONS_COUNT = 7;
   private positions: Float32Array[];
   private namedGeometries: Record<string, Float32Array> = {};
   private currentSectionIndex: number = 0;
@@ -507,29 +509,118 @@ export class BackgroundGraphicsService {
       pillPositions[i * 3 + 2] = rot[2];
     }
 
+    const spherePositions = new Float32Array(count * 3);
+    const sphereR = 2.2;
+    const goldenRatio = (1 + Math.sqrt(5)) / 2;
+    for (let i = 0; i < count; i++) {
+      const theta = 2 * Math.PI * i / goldenRatio;
+      const phi = Math.acos(1 - 2 * (i + 0.5) / count);
+      
+      const px = Math.cos(theta) * Math.sin(phi) * sphereR;
+      const py = Math.sin(theta) * Math.sin(phi) * sphereR;
+      const pz = Math.cos(phi) * sphereR;
+      
+      spherePositions[i * 3 + 0] = px;
+      spherePositions[i * 3 + 1] = py;
+      spherePositions[i * 3 + 2] = pz;
+    }
+
+    const cubePositions = new Float32Array(count * 3);
+    const L = 3.6;
+    for (let i = 0; i < count; i++) {
+      const face = Math.floor(Math.random() * 6);
+      const u = (Math.random() - 0.5) * L;
+      const v = (Math.random() - 0.5) * L;
+      let px = 0, py = 0, pz = 0;
+      if (face === 0) { px = L/2; py = u; pz = v; }
+      else if (face === 1) { px = -L/2; py = u; pz = v; }
+      else if (face === 2) { px = u; py = L/2; pz = v; }
+      else if (face === 3) { px = u; py = -L/2; pz = v; }
+      else if (face === 4) { px = u; py = v; pz = L/2; }
+      else { px = u; py = v; pz = -L/2; }
+      
+      let rot = rotateY(px, py, pz, 45 * Math.PI / 180);
+      rot = rotateX(rot[0], rot[1], rot[2], 35 * Math.PI / 180);
+      cubePositions[i * 3 + 0] = rot[0];
+      cubePositions[i * 3 + 1] = rot[1];
+      cubePositions[i * 3 + 2] = rot[2];
+    }
+
+    const torusPositions = new Float32Array(count * 3);
+    const R_maj = 2.4;
+    const r_min = 0.8;
+    for (let i = 0; i < count; i++) {
+      const u = Math.random() * Math.PI * 2;
+      const v = Math.random() * Math.PI * 2;
+      const px = (R_maj + r_min * Math.cos(v)) * Math.cos(u);
+      const py = (R_maj + r_min * Math.cos(v)) * Math.sin(u);
+      const pz = r_min * Math.sin(v);
+      
+      let rot = rotateX(px, py, pz, 70 * Math.PI / 180);
+      torusPositions[i * 3 + 0] = rot[0];
+      torusPositions[i * 3 + 1] = rot[1];
+      torusPositions[i * 3 + 2] = rot[2];
+    }
+
+    // Cosmic Flow: 3D volumetric orbital vortex (for #promo)
+    const cosmicPositions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      // Distribute across multiple orbital shells
+      const shell = Math.floor(Math.random() * 3); // 0, 1, 2
+      const baseR = 2.5 + shell * 1.6; // shells at r=2.5, 4.1, 5.7
+      const rVariance = (Math.random() - 0.5) * 0.8;
+      const r = baseR + rVariance;
+
+      // Polar coordinates with bias toward equator for vortex look
+      const theta = Math.random() * Math.PI * 2; // full azimuth
+      const phi = (Math.random() - 0.5) * Math.PI * 0.6; // -54° to +54° elevation
+
+      const cosP = Math.cos(phi);
+      let px = r * cosP * Math.cos(theta);
+      let py = r * Math.sin(phi);
+      let pz = r * cosP * Math.sin(theta);
+
+      // Add a spiraling twist: rotate each shell's Y by shell angle
+      const twist = shell * (Math.PI / 4) + theta * 0.15;
+      const tx = px * Math.cos(twist) - pz * Math.sin(twist);
+      const tz = px * Math.sin(twist) + pz * Math.cos(twist);
+      px = tx;
+      pz = tz;
+
+      cosmicPositions[i * 3 + 0] = px;
+      cosmicPositions[i * 3 + 1] = py;
+      cosmicPositions[i * 3 + 2] = pz;
+    }
+
     this.positions = [
       gridPositions,          // 0: Intro
-      mortarboardPositions,   // 1: Education
-      briefcasePositions,      // 2: Experience
-      humanBustPositions,      // 3: About
-      laptopPositions,         // 4: Services
-      envelopePositions,     // 5: Contacts
+      cosmicPositions,        // 1: Promo (Cosmic Vortex)
+      humanBustPositions,     // 2: About
+      briefcasePositions,     // 3: Experience
+      laptopPositions,        // 4: Services
+      mortarboardPositions,   // 5: Education
+      envelopePositions,      // 6: Contacts
     ];
 
     this.namedGeometries = {
       'grid': gridPositions,
+      'cosmic': cosmicPositions,
       'mortarboard': mortarboardPositions,
       'briefcase': briefcasePositions,
       'human': humanBustPositions,
       'laptop': laptopPositions,
       'plane': envelopePositions,
       'pill': pillPositions,
+      'sphere': spherePositions,
+      'cube': cubePositions,
+      'torus': torusPositions,
     };
   }
 
   private getTargetOffset(sectionIndex: number): THREE.Vector2 {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    if (sectionIndex === 0 || sectionIndex === 5) {
+    // Intro (0), Promo (1), and Contacts (6) are centered / full-bleed
+    if (sectionIndex === 0 || sectionIndex === 1 || sectionIndex === 6) {
       return new THREE.Vector2(0, 0);
     }
     return isMobile ? new THREE.Vector2(0, -1.2) : new THREE.Vector2(3.8, 0);
@@ -556,6 +647,15 @@ export class BackgroundGraphicsService {
       duration: this.prefersReducedMotion ? 0 : 1.4,
       ease: 'power2.inOut',
     });
+
+    // Activate pill mode for promo cosmic section
+    if (this.pillModeTween) this.pillModeTween.kill();
+    this.pillModeTween = gsap.to(this.particleMaterial.uniforms.uPillMode, {
+      value: 0.0,
+      duration: this.prefersReducedMotion ? 0 : 0.8,
+      ease: 'power2.out',
+      onComplete: () => { this.pillModeTween = null; }
+    });
   }
   
   public morphToGeometry(type: string | number, progress?: number): void {
@@ -580,6 +680,54 @@ export class BackgroundGraphicsService {
       y: 0,
       duration: this.prefersReducedMotion ? 0 : 1.4,
       ease: 'power2.inOut',
+    });
+  }
+
+  public morphAboutTrack(progress: number): void {
+    if (!this.particleGeometry || !this.particleMaterial) return;
+    this.currentSectionIndex = 2; // About is now index 2
+    
+    // Kill conflicting tweens
+    if (this.morphTween) {
+      this.morphTween.kill();
+      this.morphTween = null;
+    }
+    
+    const posAttr = this.particleGeometry.attributes.position as THREE.BufferAttribute;
+    const targetAttr = this.particleGeometry.attributes.aTargetPosition as THREE.BufferAttribute;
+    
+    const stage = progress <= 0.5 ? 1 : 2;
+    
+    if (stage === 1) {
+      const p = progress * 2.0; // 0..1
+      const source = this.namedGeometries['sphere'];
+      const target = this.namedGeometries['cube'];
+      
+      (posAttr.array as Float32Array).set(source);
+      (targetAttr.array as Float32Array).set(target);
+      this.particleMaterial.uniforms.uMorphProgress.value = p;
+    } else {
+      const p = (progress - 0.5) * 2.0; // 0..1
+      const source = this.namedGeometries['cube'];
+      const target = this.namedGeometries['torus'];
+      
+      (posAttr.array as Float32Array).set(source);
+      (targetAttr.array as Float32Array).set(target);
+      this.particleMaterial.uniforms.uMorphProgress.value = p;
+    }
+    
+    posAttr.needsUpdate = true;
+    targetAttr.needsUpdate = true;
+    
+    this.syncSectionColor(2); // About = index 2
+    
+    const targetOffset = this.getTargetOffset(2);
+    if (this.offsetTween) this.offsetTween.kill();
+    this.offsetTween = gsap.to(this.particleMaterial.uniforms.uShapeOffset.value, {
+      x: targetOffset.x,
+      y: targetOffset.y,
+      duration: 0.1,
+      ease: 'none',
     });
   }
 

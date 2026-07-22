@@ -13,6 +13,7 @@ export interface BackgroundCanvasRef {
   overrideColor: (hex: number) => void;
   clearColorOverride: () => void;
   setPillMode: (active: boolean) => void;
+  morphAboutTrack: (progress: number) => void;
 }
 
 const BackgroundCanvas = forwardRef<BackgroundCanvasRef>((props, ref) => {
@@ -45,6 +46,9 @@ const BackgroundCanvas = forwardRef<BackgroundCanvasRef>((props, ref) => {
     },
     setPillMode: (active: boolean) => {
       serviceRef.current?.setPillMode(active);
+    },
+    morphAboutTrack: (progress: number) => {
+      serviceRef.current?.morphAboutTrack(progress);
     }
   }));
 

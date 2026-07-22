@@ -34,19 +34,66 @@ export class ScrollInterfaceService {
   }
 
   private init(): void {
-    const totalItems = this.items.length;
+    if (!this.track || !this.section) return;
+
+    const getScrollAmount = () => {
+      const trackWidth = this.track.scrollWidth;
+      const viewportWidth = window.innerWidth;
+      const amount = trackWidth - viewportWidth + 120; // 120px padding buffer for clean end alignment
+      return amount > 0 ? -amount : 0;
+    };
+
+    const getEndDistance = () => {
+      const trackWidth = this.track.scrollWidth;
+      const viewportWidth = window.innerWidth;
+      const scrollDistance = trackWidth - viewportWidth + 120;
+      return '+=' + Math.max(scrollDistance, window.innerHeight * 1.5);
+    };
 
     this.scrollTween = gsap.to(this.track, {
-      xPercent: -100 * (totalItems - 1),
+      x: () => getScrollAmount(),
       ease: 'none',
       scrollTrigger: {
         trigger: this.section,
         start: 'top top',
-        end: 'bottom bottom',
+        end: () => getEndDistance(),
         scrub: 1,
         pin: true,
-        onUpdate: (self) => this.onScrollUpdate(self.progress)
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          this.onScrollUpdate(self.progress);
+          this.updateCardEffects();
+        }
       }
+    });
+
+    // Initial card setup
+    this.updateCardEffects();
+  }
+
+  private updateCardEffects(): void {
+    if (!this.items || this.items.length === 0) return;
+    const viewportCenter = window.innerWidth / 2;
+
+    this.items.forEach((item) => {
+      if (!item) return;
+      const rect = item.getBoundingClientRect();
+      const cardCenter = rect.left + rect.width / 2;
+      const distFromCenter = Math.abs(viewportCenter - cardCenter);
+      const maxDist = window.innerWidth * 0.5;
+      const normalized = Math.max(0, 1 - distFromCenter / maxDist);
+
+      const scale = 0.94 + normalized * 0.08;
+      const opacity = 0.55 + normalized * 0.45;
+
+      gsap.to(item, {
+        scale: scale,
+        opacity: opacity,
+        duration: 0.15,
+        ease: 'power1.out',
+        overwrite: 'auto',
+      });
     });
   }
 
@@ -57,4 +104,5 @@ export class ScrollInterfaceService {
     }
   }
 }
+
 

@@ -21,6 +21,7 @@ import { TimelineItem } from '../components/ui/TimelineItem/TimelineItem';
 import { SkillTag } from '../components/ui/SkillTag/SkillTag';
 import { CtaButton } from '../components/ui/CtaButton/CtaButton';
 import OptionWheel from '../components/OptionWheel';
+import EstimateCalculator from '../components/EstimateCalculator';
 
 const BackgroundCanvas = dynamic(() => import('../components/BackgroundCanvas'), { ssr: false });
 
@@ -59,6 +60,9 @@ export default function Page() {
   const [activeServiceIndex, setActiveServiceIndex] = useState(0);
   const { theme } = useTheme();
 
+  // ── Scroll-based wheel rotation state ───────────────────────────────────────
+  const [wheelScrollIndex, setWheelScrollIndex] = useState(0);
+
   // ── Mobile detection (SSR-safe, updated on mount) ───────────────────────────
   const [isMobile, setIsMobile] = useState(false);
 
@@ -96,6 +100,36 @@ export default function Page() {
     mq.addEventListener('change', onMqChange);
 
     return () => mq.removeEventListener('change', onMqChange);
+  }, []);
+
+  // ── Scroll-based wheel rotation ─────────────────────────────────────────────
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = SECTIONS.map(s => document.getElementById(s.toLowerCase())).filter(Boolean);
+      if (sections.length === 0) return;
+
+      let closestSection = -1;
+      let closestDistance = Infinity;
+
+      sections.forEach((section, index) => {
+        if (!section) return;
+        const rect = section.getBoundingClientRect();
+        const distance = Math.abs(rect.top - window.innerHeight / 2);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = index;
+        }
+      });
+
+      if (closestSection !== -1) {
+        setWheelScrollIndex(closestSection);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial call
+
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // ── Update video source on theme change ───────────────────────
@@ -460,68 +494,7 @@ export default function Page() {
           className="min-h-screen flex items-center relative overflow-hidden py-20"
           style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
         >
-          <div className="w-full max-w-5xl mx-auto">
-            <p className="font-mono text-xs mb-4 tracking-widest uppercase text-secondary animate-entrance">
-              [STEP.03/05] — Services & Solutions
-            </p>
-            <h2 className="font-display font-bold uppercase mb-16 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
-              {contentData.services.header}
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-              {contentData.services.items.map((item, idx) => (
-                <div
-                  key={item.id || idx}
-                  className="border-b border-border/30 pb-8 flex flex-col justify-between group transition-all duration-300"
-                >
-                  <div>
-                    <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
-                      <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
-                        [0{idx + 1} / 0{contentData.services.items.length}]
-                      </span>
-                      <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
-                        {item.price}
-                      </span>
-                    </div>
-
-                    <h3 className="font-display text-2xl font-bold uppercase text-primary mb-2 group-hover:text-accent transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="font-mono text-xs text-accent uppercase tracking-wider mb-4">
-                      {item.subtitle}
-                    </p>
-
-                    <p className="font-body text-sm text-secondary leading-relaxed mb-6">
-                      {item.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      {item.deliverables.map((deliv, dIdx) => (
-                        <span
-                          key={dIdx}
-                          className="font-mono text-[11px] px-2.5 py-1 rounded-sm border border-border/50 bg-surface/60 text-primary/90"
-                        >
-                          ✓ {deliv}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-border/40 flex items-center justify-between">
-                    <span className="font-mono text-[11px] text-secondary uppercase tracking-wider">
-                      {item.id}
-                    </span>
-                    <a
-                      href="#contacts"
-                      className="font-mono text-xs uppercase text-accent group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 font-semibold"
-                    >
-                      Заказать →
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <EstimateCalculator />
         </section>
 
         {/* Section 5 — Education */}
@@ -757,24 +730,24 @@ export default function Page() {
 
       {/* ── Global Side HUD Controller (OptionWheel Штурвал Навигации) ──────── */}
       <div
-        className="fixed right-0 top-1/2 -translate-y-1/2 w-[280px] sm:w-[320px] h-[400px] z-40 pointer-events-none hidden md:block"
+        className="fixed right-0 top-1/2 -translate-y-1/2 w-[380px] sm:w-[420px] h-[500px] z-40 pointer-events-none hidden md:block"
         aria-label="Navigation Wheel HUD"
       >
         <div className="w-full h-full relative pointer-events-auto bg-transparent overflow-hidden flex items-center">
           <OptionWheel
             items={[...SECTIONS]}
             defaultSelected={0}
-            selected={activeSection >= 0 ? activeSection : 0}
+            selected={wheelScrollIndex}
             onChange={(index) => {
               if (index !== activeSectionRef.current) {
                 handleNavClick(index);
               }
             }}
             side="right"
-            fontSize={1.6}
+            fontSize={2.2}
             curve={1.2}
             tilt={10}
-            inset={40}
+            inset={60}
             textColor="var(--color-secondary)"
             activeColor="var(--color-primary)"
             wheelPassthrough={true}

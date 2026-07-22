@@ -17,13 +17,13 @@ export function Header({ activeSectionIndex, sections, onNavClick }: HeaderProps
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-300 px-4 md:px-8 lg:px-12"
       style={{
         height: '60px',
-        background: activeSectionIndex === 0
+        background: activeSectionIndex < 0
           ? 'rgba(250,250,250,0)'
           : theme === 'light' ? 'rgba(250,250,250,0.85)' : 'rgba(9, 9, 11, 0.85)',
-        backdropFilter: activeSectionIndex === 0
+        backdropFilter: activeSectionIndex < 0
           ? 'blur(0px)'
           : 'blur(12px)',
-        borderBottom: activeSectionIndex === 0
+        borderBottom: activeSectionIndex < 0
           ? '0.5px solid transparent'
           : '0.5px solid var(--color-border)',
       }}
@@ -40,9 +40,9 @@ export function Header({ activeSectionIndex, sections, onNavClick }: HeaderProps
         aria-label="Section navigation"
         className="hidden md:flex gap-8 transition-all duration-300"
         style={{
-          opacity: activeSectionIndex === 0 ? 0 : 1,
-          pointerEvents: activeSectionIndex === 0 ? 'none' : 'auto',
-          transform: activeSectionIndex === 0 ? 'translateY(-10px)' : 'translateY(0)',
+          opacity: activeSectionIndex < 0 ? 0 : 1,
+          pointerEvents: activeSectionIndex < 0 ? 'none' : 'auto',
+          transform: activeSectionIndex < 0 ? 'translateY(-10px)' : 'translateY(0)',
         }}
       >
         {sections.map((name, i) => (

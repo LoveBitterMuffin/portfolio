@@ -6,7 +6,10 @@ interface ScrollProgressIndicatorProps {
 }
 
 export function ScrollProgressIndicator({ progress, activeSection }: ScrollProgressIndicatorProps) {
-  const stepLabel = `[STEP.0${activeSection + 1}/05]`;
+  // activeSection: -1 = intro/promo (system online), 0-4 = About..Contacts
+  const stepLabel = activeSection < 0
+    ? '[SYSTEM ONLINE]'
+    : `[STEP.0${activeSection + 1}/05]`;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
