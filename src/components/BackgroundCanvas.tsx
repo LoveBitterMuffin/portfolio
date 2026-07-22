@@ -5,10 +5,14 @@ import { BackgroundGraphicsService } from '../services/BackgroundGraphicsService
 import { useTheme } from '../contexts/ThemeContext';
 
 export interface BackgroundCanvasRef {
-  updatePointer: (x: number, y: number) => void;
   resize: (width: number, height: number) => void;
+  updatePointer: (clientX: number, clientY: number) => void;
   morphTo: (sectionIndex: number, progress?: number) => void;
+  morphToGeometry: (type: string | number, progress?: number) => void;
   setReducedMotion: (reduced: boolean) => void;
+  overrideColor: (hex: number) => void;
+  clearColorOverride: () => void;
+  setPillMode: (active: boolean) => void;
 }
 
 const BackgroundCanvas = forwardRef<BackgroundCanvasRef>((props, ref) => {
@@ -18,18 +22,30 @@ const BackgroundCanvas = forwardRef<BackgroundCanvasRef>((props, ref) => {
   const { theme } = useTheme();
 
   useImperativeHandle(ref, () => ({
-    updatePointer: (x: number, y: number) => {
-      serviceRef.current?.updatePointer(x, y);
-    },
     resize: (width: number, height: number) => {
       serviceRef.current?.resize(width, height);
+    },
+    updatePointer: (clientX: number, clientY: number) => {
+      serviceRef.current?.updatePointer(clientX, clientY);
     },
     morphTo: (sectionIndex: number, progress?: number) => {
       serviceRef.current?.morphTo(sectionIndex, progress);
     },
+    morphToGeometry: (type: string | number, progress?: number) => {
+      serviceRef.current?.morphToGeometry(type, progress);
+    },
     setReducedMotion: (reduced: boolean) => {
       serviceRef.current?.setReducedMotion(reduced);
     },
+    overrideColor: (hex: number) => {
+      serviceRef.current?.overrideColor(hex);
+    },
+    clearColorOverride: () => {
+      serviceRef.current?.clearColorOverride();
+    },
+    setPillMode: (active: boolean) => {
+      serviceRef.current?.setPillMode(active);
+    }
   }));
 
   useEffect(() => {

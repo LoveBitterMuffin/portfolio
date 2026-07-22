@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useImperativeHandle, forwardRef } from 'react';
-import DotGrid from './ui/DotGrid/DotGrid';
 import OptionWheel from './OptionWheel';
 import { CtaButton } from './ui/CtaButton/CtaButton';
 import contentData from '../data/content.json';
@@ -44,26 +43,8 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
       ref={containerRef}
       id="intro"
       className="relative w-screen min-h-screen flex items-center justify-center overflow-hidden"
-      style={{ background: 'var(--color-background)' }}
+      style={{ background: 'transparent' }}
     >
-      {/* DotGrid reactive background */}
-      <div className="absolute inset-0 z-0">
-        <DotGrid
-          key={theme}
-          dotSize={4}
-          gap={8}
-          baseColor="var(--color-background)"
-          activeColor="var(--color-secondary)"
-          proximity={70}
-          speedTrigger={100}
-          shockRadius={80}
-          shockStrength={5}
-          maxSpeed={5000}
-          resistance={750}
-          returnDuration={1.5}
-        />
-      </div>
-
       {/* Hero text */}
       <div className="absolute left-[var(--space-8)] md:left-[var(--space-12)] top-1/2 -translate-y-1/2 z-20 pointer-events-none select-none pr-[var(--space-8)] md:pr-0">
         <p

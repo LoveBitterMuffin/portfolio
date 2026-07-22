@@ -463,18 +463,21 @@ export class BackgroundGraphicsService {
 
     // Matrix Pill ('pill') - Two Capsules for Intro (volumetric, rotated)
     const pillPositions = new Float32Array(count * 3);
-    const r = 0.85;
-    const halfHeight = 1.5;
+    const r = 1.1;
+    const halfHeight = 1.1;
     for (let i = 0; i < count; i++) {
       const isLeft = i % 2 === 0;
       const xOffset = isLeft ? -4.2 : 4.2;
       
-      const isVolume = Math.random() < 0.3;
+      const isVolume = Math.random() < 0.15;
       const currentR = r * (isVolume ? Math.pow(Math.random(), 0.5) : 1.0);
       
       let px = 0, py = 0, pz = 0;
       
-      const isCyl = Math.random() > 0.4;
+      const cylArea = 2 * Math.PI * r * (2 * halfHeight);
+      const spheresArea = 4 * Math.PI * r * r;
+      const isCyl = Math.random() < (cylArea / (cylArea + spheresArea));
+      
       if (isCyl) {
         py = (Math.random() * 2 - 1) * halfHeight;
         const theta = Math.random() * Math.PI * 2;
@@ -484,7 +487,7 @@ export class BackgroundGraphicsService {
         const isTop = Math.random() > 0.5;
         const phi = Math.random() * Math.PI * 2;
         const u = Math.random();
-        const theta = Math.acos(2 * u - 1) / 2;
+        const theta = Math.acos(u); // 0 to PI/2, uniform hemisphere distribution
         const sign = isTop ? 1 : -1;
         px = Math.sin(theta) * Math.cos(phi) * currentR;
         py = (isTop ? halfHeight : -halfHeight) + Math.cos(theta) * currentR * sign;
@@ -493,11 +496,11 @@ export class BackgroundGraphicsService {
 
       let rot: number[];
       if (isLeft) {
-        rot = rotateZ(px, py, pz, -25 * Math.PI / 180);
-        rot = rotateX(rot[0], rot[1], rot[2], 15 * Math.PI / 180);
+        rot = rotateZ(px, py, pz, -15 * Math.PI / 180);
+        rot = rotateX(rot[0], rot[1], rot[2], 25 * Math.PI / 180);
       } else {
-        rot = rotateZ(px, py, pz, 30 * Math.PI / 180);
-        rot = rotateY(rot[0], rot[1], rot[2], 20 * Math.PI / 180);
+        rot = rotateZ(px, py, pz, 15 * Math.PI / 180);
+        rot = rotateY(rot[0], rot[1], rot[2], -25 * Math.PI / 180);
       }
       
       pillPositions[i * 3 + 0] = rot[0] + xOffset;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect } from 'react';
-import DotGrid from './ui/DotGrid/DotGrid';
 import { VideoInteractionService } from '../services/VideoInteractionService';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -54,24 +53,6 @@ export default function MouseFollowVideo() {
 
   return (
     <div ref={containerRef} className="relative w-full h-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: 'var(--color-background)' }}>
-
-      {/* DotGrid background layer */}
-      <div className="absolute inset-0 z-0">
-        <DotGrid
-          key={theme}
-          dotSize={4}
-          gap={8}
-          baseColor="var(--color-background)"
-          activeColor="var(--color-secondary)"
-          proximity={70}
-          speedTrigger={100}
-          shockRadius={80}
-          shockStrength={5}
-          maxSpeed={5000}
-          resistance={750}
-          returnDuration={1.5}
-        />
-      </div>
 
       {/* Video on top — mix-blend-mode зависит от темы */}
       <div 

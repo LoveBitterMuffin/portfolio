@@ -42,6 +42,7 @@ export default function Page() {
 
   // ── UI state (only what needs to re-render) ───────────────────────────────
   const [activeSection, setActiveSection] = useState(0);
+  const activeSectionRef = useRef<number>(0);
   const { theme } = useTheme();
 
   // ── Mobile detection (SSR-safe, updated on mount) ───────────────────────────
@@ -49,14 +50,28 @@ export default function Page() {
 
   // ── Pointer throttle — ~60fps cap to avoid overloading RAF ──────────────────
   const lastPointerTimeRef = useRef(0);
+  const lastClientXRef = useRef(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
   const POINTER_THROTTLE_MS = 16; // ≈ 60 fps
 
   const handlePointerMove = useCallback((e: PointerEvent) => {
     const now = performance.now();
     if (now - lastPointerTimeRef.current < POINTER_THROTTLE_MS) return;
     lastPointerTimeRef.current = now;
+    lastClientXRef.current = e.clientX;
     backgroundCanvasRef.current?.updatePointer(e.clientX, e.clientY);
     videoServiceRef.current?.updatePointer(e.clientX, e.clientY);
+
+    // Matrix Pill logic on intro section
+    if (activeSectionRef.current === 0) {
+      const progressX = e.clientX / window.innerWidth;
+      if (progressX < 0.4 || progressX > 0.6) {
+        backgroundCanvasRef.current?.morphToGeometry('pill');
+        backgroundCanvasRef.current?.setPillMode(true);
+      } else {
+        backgroundCanvasRef.current?.morphToGeometry('grid');
+        backgroundCanvasRef.current?.setPillMode(false);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -125,7 +140,23 @@ export default function Page() {
             const sectionIndex = SECTIONS.findIndex(s => s.toLowerCase() === sectionId);
             if (sectionIndex !== -1) {
               setActiveSection(sectionIndex);
-              backgroundCanvasRef.current?.morphTo(sectionIndex);
+              activeSectionRef.current = sectionIndex;
+              
+              if (sectionIndex === 0) {
+                // Restore morph based on current mouse position
+                const progressX = lastClientXRef.current / window.innerWidth;
+                if (progressX < 0.4 || progressX > 0.6) {
+                  backgroundCanvasRef.current?.setPillMode(true);
+                  backgroundCanvasRef.current?.morphToGeometry('pill');
+                } else {
+                  backgroundCanvasRef.current?.setPillMode(false);
+                  backgroundCanvasRef.current?.morphToGeometry('grid');
+                }
+              } else {
+                // Clear any pill mode / color overrides from intro
+                backgroundCanvasRef.current?.setPillMode(false);
+                backgroundCanvasRef.current?.morphTo(sectionIndex);
+              }
             }
           }
         });
@@ -182,7 +213,7 @@ export default function Page() {
         <section
           id="education"
           className="min-h-screen flex items-center"
-          style={{ background: 'var(--color-background)', paddingLeft: '10vw', paddingRight: '10vw' }}
+          style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
         >
               <div className="max-w-4xl" data-speed="0.2">
                 <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary animate-entrance">
@@ -234,7 +265,7 @@ export default function Page() {
         <section
           id="experience"
           className="min-h-screen flex items-center relative overflow-hidden"
-          style={{ background: 'var(--color-background)', paddingLeft: '10vw', paddingRight: '10vw' }}
+          style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
         >
           <div className="w-full max-w-4xl">
             <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary">
@@ -270,7 +301,7 @@ export default function Page() {
           ref={aboutSectionRef}
           id="about"
           className="horizontal-scroll-section min-h-screen flex items-center relative overflow-hidden"
-          style={{ background: 'var(--color-background)' }}
+          style={{ background: 'transparent' }}
         >
           <div className="w-full px-[10vw]">
             <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary animate-entrance">
@@ -342,7 +373,7 @@ export default function Page() {
         <section
           id="services"
           className="min-h-screen flex items-center relative overflow-hidden"
-          style={{ background: 'var(--color-background)', paddingLeft: '10vw', paddingRight: '10vw' }}
+          style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
         >
           <div className="w-full max-w-4xl" data-speed="0.2">
             <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary animate-entrance">
@@ -375,7 +406,7 @@ export default function Page() {
         <section
           id="contacts"
           className="min-h-screen flex items-center justify-center relative"
-          style={{ background: 'var(--color-background)' }}
+          style={{ background: 'transparent' }}
         >
               <div className="grid gap-16 px-[10vw] w-full" style={{ gridTemplateColumns: '1fr 1fr' }}>
 
