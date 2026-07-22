@@ -38,8 +38,12 @@ interface DotGridProps {
   style?: CSSProperties;
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+function resolveColorToRgb(color: string): { r: number; g: number; b: number } {
+  if (typeof window !== 'undefined' && color.startsWith('var(')) {
+    const varName = color.slice(4, -1).trim();
+    color = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }
+  const m = color.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
   if (!m) return { r: 0, g: 0, b: 0 };
   return {
     r: parseInt(m[1], 16),
@@ -51,8 +55,8 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 const DotGrid = ({
   dotSize = 16,
   gap = 32,
-  baseColor = '#5227FF',
-  activeColor = '#5227FF',
+  baseColor = 'var(--color-background)',
+  activeColor = 'var(--color-secondary)',
   proximity = 150,
   speedTrigger = 100,
   shockRadius = 250,
@@ -77,8 +81,8 @@ const DotGrid = ({
     lastY: 0,
   });
 
-  const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
-  const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
+  const baseRgb = useMemo(() => resolveColorToRgb(baseColor), [baseColor]);
+  const activeRgb = useMemo(() => resolveColorToRgb(activeColor), [activeColor]);
 
   const circlePath = useMemo(() => {
     if (typeof window === 'undefined' || !window.Path2D) return null;

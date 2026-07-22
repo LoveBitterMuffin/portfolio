@@ -20,6 +20,11 @@ export interface SkillCategory {
   items: string[];
 }
 
+export interface ServiceItem {
+  title: string;
+  price: string;
+}
+
 export interface SocialLink {
   name: string;
   url: string;
@@ -49,6 +54,10 @@ export interface PortfolioContent {
       soft: SkillCategory;
     };
     bio: string;
+  };
+  services: {
+    header: string;
+    items: ServiceItem[];
   };
   contacts: {
     header: string;

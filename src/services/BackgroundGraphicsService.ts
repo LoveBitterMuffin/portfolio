@@ -30,6 +30,8 @@ void main() {
 `;
 
 const fragmentShader = `
+uniform vec3 uColor;
+
 void main() {
     float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
     if (distanceToCenter > 0.5) {
@@ -37,9 +39,7 @@ void main() {
     }
 
     float strength = 1.0 - smoothstep(0.4, 0.5, distanceToCenter);
-    vec3 color = vec3(0.86, 0.86, 0.86);
-
-    gl_FragColor = vec4(color, strength * 0.8);
+    gl_FragColor = vec4(uColor, strength * 0.8);
 }
 `;
 
@@ -56,7 +56,7 @@ export class BackgroundGraphicsService {
   private targetPointer = { x: 0, y: 0 };
   private currentPointer = { x: 0, y: 0 };
   
-  private readonly prefersReducedMotion: boolean;
+  private prefersReducedMotion: boolean;
 
   private particleGeometry!: THREE.BufferGeometry;
   private particleMaterial!: THREE.ShaderMaterial;
@@ -73,36 +73,47 @@ export class BackgroundGraphicsService {
     this.particlesCount = detectLowEndDevice() ? 300 : 1000;
     this.positions = new Array(this.SECTIONS_COUNT);
 
-    this.init();
+    const webglSupported = this.init();
     
-    if (this.prefersReducedMotion) {
-      this.renderStaticFrame();
-    } else {
-      this.startLoop();
-    }
+    if (webglSupported) {
+      if (this.prefersReducedMotion) {
+        this.renderStaticFrame();
+      } else {
+        this.startLoop();
+      }
 
-    document.addEventListener('visibilitychange', this.onVisibilityChange);
+      document.addEventListener('visibilitychange', this.onVisibilityChange);
+    }
   }
 
 
-  private init() {
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
+  private init(): boolean {
+    try {
+      const width = this.container.clientWidth;
+      const height = this.container.clientHeight;
 
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 100);
-    this.camera.position.z = 5;
+      this.scene = new THREE.Scene();
+      this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 100);
+      this.camera.position.z = 5;
 
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      alpha: true,
-      antialias: true,
-      powerPreference: "high-performance"
-    });
-    this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: this.canvas,
+        alpha: true,
+        antialias: true,
+        powerPreference: "high-performance"
+      });
+      this.renderer.setSize(width, height);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    this.initParticles();
+      this.initParticles();
+      return true;
+    } catch (e) {
+      console.warn('[BGService] WebGL not supported, using static fallback');
+      // Set canvas to hidden and use CSS fallback
+      this.canvas.style.display = 'none';
+      this.container.style.background = 'var(--color-background)';
+      return false;
+    }
   }
 
   private initParticles() {
@@ -130,7 +141,8 @@ export class BackgroundGraphicsService {
       uniforms: {
         uTime: { value: 0 },
         uMorphProgress: { value: 0 },
-        uPointer: { value: new THREE.Vector2(0, 0) }
+        uPointer: { value: new THREE.Vector2(0, 0) },
+        uColor: { value: new THREE.Color(0xDCDCDC) }
       }
     });
 
@@ -299,6 +311,26 @@ export class BackgroundGraphicsService {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+  }
+
+  public setReducedMotion(reduced: boolean): void {
+    if (this.prefersReducedMotion === reduced) return;
+    
+    this.prefersReducedMotion = reduced;
+    
+    if (reduced) {
+      this.stopLoop();
+      this.renderStaticFrame();
+    } else {
+      this.startLoop();
+    }
+  }
+
+  public updateParticleColor(theme: 'light' | 'dark'): void {
+    const colorHex = theme === 'light' ? 0xDCDCDC : 0x52525B;
+    if (this.particleMaterial) {
+      this.particleMaterial.uniforms.uColor.value.setHex(colorHex);
+    }
   }
 
   public destroy() {

@@ -10,7 +10,7 @@
 FULL-STACK DEVELOPER & DEVSECOPS ENGINEER
 
 ### Tagline
-Архитектура безопасности. Эстетика кода. Педагогика будущего.
+Архитектура безопасных систем. Бескомпромиссная эстетика фронтенда & DevSecOps.
 
 ### CTA Button Text
 Исследовать систему
@@ -49,15 +49,11 @@ FULL-STACK DEVELOPER & DEVSECOPS ENGINEER
 **Details:**
 - Frontend-мастерская: React, Next.js, Tailwind CSS.
 - Backend-мастерская: Node.js, базы данных, API.
-- Кружки: Визуальное программирование, ИИ в действии, Компьютерная грамотность.
+- IT-инжиниринг: инфраструктурные модули, автоматизация процессов.
 
 ### Timeline Item 2
-**Role:** Репетитор ЕГЭ по информатике
-**Focus:** Подготовка к экзаменам, алгоритмизация, разбор задач высокой сложности.
-
-### Timeline Item 3
-**Role:** Freelance Web Developer
-**Focus:** Полный цикл разработки веб-приложений. От прототипа в Figma до деплоя на Kubernetes. Оптимизация Core Web Vitals, SEO-аудит, автоматизация тестирования.
+**Role:** Freelance Web Developer / DevSecOps Engineer
+**Focus:** Полный цикл разработки веб-приложений. От архитектуры в Figma до деплоя на Kubernetes. Оптимизация Core Web Vitals, глубокий аудит по OWASP, настройка CI/CD Pipeline, Vault, автоматизация тестирования.
 
 ---
 
@@ -87,7 +83,18 @@ FULL-STACK DEVELOPER & DEVSECOPS ENGINEER
 
 ---
 
-## [SECTION 4] CONTACTS
+## [SECTION 4] SERVICES & COST
+### Section Header
+СТОИМОСТЬ УСЛУГ // COST OF SERVICES
+
+### Services List
+- **Web Development / Создание сайтов:** по договоренности (включает интерактивную смету)
+- **DevSecOps & Консалтинг:** по договоренности
+- **Аудит безопасности & Код-ревью:** по договоренности
+
+---
+
+## [SECTION 5] CONTACTS
 ### Section Header
 СВЯЗЬ // INITIATE CONNECTION
 

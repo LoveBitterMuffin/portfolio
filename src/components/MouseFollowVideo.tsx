@@ -3,13 +3,16 @@
 import { useRef, useState, useEffect } from 'react';
 import DotGrid from './ui/DotGrid/DotGrid';
 import { VideoInteractionService } from '../services/VideoInteractionService';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function MouseFollowVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  const serviceRef = useRef<VideoInteractionService | null>(null);
   
   const [useFallback, setUseFallback] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -19,6 +22,7 @@ export default function MouseFollowVideo() {
     const service = new VideoInteractionService(video, videoWrap, () => {
       setUseFallback(true);
     });
+    serviceRef.current = service;
 
     const handlePointer = (clientX: number, clientY: number) => {
       service.updatePointer(clientX, clientY);
@@ -41,16 +45,24 @@ export default function MouseFollowVideo() {
     };
   }, []);
 
+  // Обновление видео при смене темы
+  useEffect(() => {
+    if (serviceRef.current) {
+      serviceRef.current.updateVideoSource(theme);
+    }
+  }, [theme]);
+
   return (
-    <div ref={containerRef} className="relative w-full h-full flex items-center justify-center overflow-hidden bg-white">
+    <div ref={containerRef} className="relative w-full h-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: 'var(--color-background)' }}>
 
       {/* DotGrid background layer */}
       <div className="absolute inset-0 z-0">
         <DotGrid
+          key={theme}
           dotSize={4}
           gap={8}
-          baseColor="#ffffff"
-          activeColor="#999999"
+          baseColor="var(--color-background)"
+          activeColor="var(--color-secondary)"
           proximity={70}
           speedTrigger={100}
           shockRadius={80}
@@ -61,15 +73,22 @@ export default function MouseFollowVideo() {
         />
       </div>
 
-      {/* Video on top — mix-blend-multiply makes white bg transparent, silhouette stays opaque */}
-      {/* w-[75vw] on mobile → w-[38vw] on md+ desktops */}
-      <div ref={videoWrapRef} className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[75vw] md:w-[38vw] z-10 overflow-visible pointer-events-none" style={{ mixBlendMode: 'multiply' }}>
+      {/* Video on top — mix-blend-mode зависит от темы */}
+      <div 
+        ref={videoWrapRef} 
+        className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[75vw] md:w-[38vw] z-10 overflow-visible pointer-events-none" 
+        style={{ mixBlendMode: theme === 'light' ? 'multiply' : 'screen' }}
+      >
         {useFallback ? (
-          <img src="/lbm_fallback.png" alt="Silhouette Fallback" className="w-full h-full object-cover" />
+          <img 
+            src={theme === 'light' ? '/lbm_fallback.png' : '/lbm_dark_fallback.png'} 
+            alt="Silhouette Fallback" 
+            className="w-full h-full object-cover" 
+          />
         ) : (
           <video
             ref={videoRef}
-            src="/lbm.mp4"
+            src={theme === 'light' ? '/lbm.mp4' : '/lbm_dark.mp4'}
             className="w-full h-full object-cover"
             muted
             playsInline

@@ -5,6 +5,7 @@ import DotGrid from './ui/DotGrid/DotGrid';
 import OptionWheel from './OptionWheel';
 import { CtaButton } from './ui/CtaButton/CtaButton';
 import contentData from '../data/content.json';
+import { useTheme } from '../contexts/ThemeContext';
 
 /** Public API exposed to the parent Orchestrator via ref */
 export interface IntroPanelHandle {
@@ -27,6 +28,7 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
 
   // Expose DOM refs to parent Orchestrator
   useImperativeHandle(ref, () => ({
@@ -41,15 +43,17 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
     <div
       ref={containerRef}
       id="intro"
-      className="relative w-screen h-full flex items-center justify-center overflow-hidden bg-white"
+      className="relative w-screen min-h-screen flex items-center justify-center overflow-hidden"
+      style={{ background: 'var(--color-background)' }}
     >
       {/* DotGrid reactive background */}
       <div className="absolute inset-0 z-0">
         <DotGrid
+          key={theme}
           dotSize={4}
           gap={8}
-          baseColor="#ffffff"
-          activeColor="#999999"
+          baseColor="var(--color-background)"
+          activeColor="var(--color-secondary)"
           proximity={70}
           speedTrigger={100}
           shockRadius={80}
@@ -99,15 +103,16 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
         </CtaButton>
       </div>
 
-      {/* Video silhouette — mix-blend-mode: multiply makes white transparent */}
+      {/* Video silhouette — mix-blend-mode: multiply makes white transparent in light theme, screen makes black transparent in dark theme */}
       <div
         ref={videoWrapRef}
+        aria-hidden="true"
         className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[75vw] md:w-[38vw] z-10 overflow-visible pointer-events-none"
-        style={{ mixBlendMode: 'multiply' }}
+        style={{ mixBlendMode: theme === 'light' ? 'multiply' : 'screen' }}
       >
         <video
           ref={videoRef}
-          src="/lbm.mp4"
+          src={theme === 'light' ? '/lbm.mp4' : '/lbm_dark.mp4'}
           className="w-full h-full object-cover"
           muted
           playsInline
@@ -121,8 +126,8 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
           <OptionWheel
             items={['Intro', 'Education', 'Experience', 'About', 'Contacts']}
             defaultSelected={0}
-            textColor="#bbbbbb"
-            activeColor="#000000"
+            textColor={theme === 'light' ? '#bbbbbb' : '#a1a1aa'}
+            activeColor={theme === 'light' ? '#000000' : '#ffffff'}
             side="right"
             fontSize={4}
             spacing={1.4}

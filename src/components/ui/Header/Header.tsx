@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useTheme } from '../../../contexts/ThemeContext';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
   activeSectionIndex: number;
@@ -8,16 +10,16 @@ interface HeaderProps {
 
 export function Header({ activeSectionIndex, sections, onNavClick }: HeaderProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-300 px-4 md:px-8 lg:px-12"
       style={{
         height: '60px',
-        padding: '0 var(--space-6)',
         background: activeSectionIndex === 0
           ? 'rgba(250,250,250,0)'
-          : 'rgba(250,250,250,0.85)',
+          : theme === 'light' ? 'rgba(250,250,250,0.85)' : 'rgba(9, 9, 11, 0.85)',
         backdropFilter: activeSectionIndex === 0
           ? 'blur(0px)'
           : 'blur(12px)',
@@ -66,12 +68,15 @@ export function Header({ activeSectionIndex, sections, onNavClick }: HeaderProps
             {name}
           </button>
         ))}
+        <ThemeToggle />
       </nav>
 
       {/* Mobile hamburger button */}
-      <button
-        id="mobile-menu-toggle"
-        className="md:hidden flex flex-col gap-1.5 p-2"
+      <div className="flex items-center gap-2 md:hidden">
+        <ThemeToggle />
+        <button
+          id="mobile-menu-toggle"
+          className="flex flex-col gap-1.5 p-2"
         aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
         aria-expanded={mobileNavOpen}
         onClick={() => setMobileNavOpen((v) => !v)}
@@ -102,6 +107,7 @@ export function Header({ activeSectionIndex, sections, onNavClick }: HeaderProps
           }}
         />
       </button>
+      </div>
 
       {/* Mobile dropdown menu */}
       {mobileNavOpen && (
@@ -109,7 +115,7 @@ export function Header({ activeSectionIndex, sections, onNavClick }: HeaderProps
           aria-label="Mobile section navigation"
           className="md:hidden absolute top-[60px] left-0 right-0 flex flex-col"
           style={{
-            background: 'rgba(250,250,250,0.96)',
+            background: theme === 'light' ? 'rgba(250,250,250,0.96)' : 'rgba(9, 9, 11, 0.96)',
             backdropFilter: 'blur(12px)',
             borderBottom: '0.5px solid var(--color-border)',
           }}

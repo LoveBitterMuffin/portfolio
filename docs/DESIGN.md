@@ -19,7 +19,7 @@
 | Параметр | Значение |
 |---|---|
 | **ui-ux-pro-max Style** | Exaggerated Minimalism |
-| **Mode** | Light Only (фон строго белый) |
+| **Mode** | Light + Dark (переключатель тем) |
 | **Keywords** | Bold minimalism · oversized typography · high contrast · negative space · statement design |
 | **Best For** | Architecture · portfolio · agency · luxury · editorial |
 | **Performance** | ⚡ Excellent |
@@ -32,7 +32,7 @@
 
 Монохромная схема с единственным голубым акцентом. Цвет намеренно вынесен из «белого шума» и используется точечно — только для CTA и интерактивных состояний.
 
-### Глобальные токены
+### Глобальные токены (Light Theme)
 
 ```css
 :root {
@@ -59,18 +59,45 @@
 }
 ```
 
+### Глобальные токены (Dark Theme)
+
+```css
+:root.dark {
+  /* Структурные */
+  --color-background:   #09090B;  /* Фон страницы — глубокий чёрный */
+  --color-foreground:   #FAFAFA;  /* Основной текст */
+  --color-primary:      #FAFAFA;  /* Заголовки, иконки */
+  --color-on-primary:   #09090B;  /* Текст на светлых поверхностях */
+  --color-secondary:    #A1A1AA;  /* Вторичный текст, подписи */
+  --color-muted:        #27272A;  /* Разделители, placeholder-области */
+  --color-border:       #27272A;  /* Тонкие линии (0.5px) сетки, рамки */
+
+  /* Акцент — используется ТОЛЬКО для CTA и focus-states */
+  --color-accent:       #3B82F6;
+  --color-accent-hover: #60A5FA;
+
+  /* Специфика Three.js сцены */
+  --color-particle:     #52525B;  /* Цвет частиц (тёмно-серый) */
+  --color-grid-line:    rgba(255, 255, 255, 0.04); /* Тонкая сетка фона */
+
+  /* Состояния */
+  --color-destructive:  #EF4444;
+  --color-ring:         #FAFAFA;  /* Outline при фокусе */
+}
+```
+
 ### Применение цвета по элементам
 
-| Элемент | Значение | Токен |
-|---|---|---|
-| Фон страницы | `#FAFAFA` | `--color-background` |
-| Основной текст | `#09090B` | `--color-foreground` |
-| Заголовки H1–H2 | `#18181B` | `--color-primary` |
-| Вторичный текст, даты | `#3F3F46` | `--color-secondary` |
-| Частицы Three.js | `#DCDCDC` | `--color-particle` |
-| Разделители, линии | `#E4E4E7` | `--color-border` |
-| Кнопки, ссылки (hover) | `#2563EB` | `--color-accent` |
-| Технические теги/статусы | `#3F3F46` mono | `--color-secondary` |
+| Элемент | Light Theme | Dark Theme | Токен |
+|---|---|---|---|
+| Фон страницы | `#FAFAFA` | `#09090B` | `--color-background` |
+| Основной текст | `#09090B` | `#FAFAFA` | `--color-foreground` |
+| Заголовки H1–H2 | `#18181B` | `#FAFAFA` | `--color-primary` |
+| Вторичный текст, даты | `#3F3F46` | `#A1A1AA` | `--color-secondary` |
+| Частицы Three.js | `#DCDCDC` | `#52525B` | `--color-particle` |
+| Разделители, линии | `#E4E4E7` | `#27272A` | `--color-border` |
+| Кнопки, ссылки (hover) | `#2563EB` | `#3B82F6` | `--color-accent` |
+| Технические теги/статусы | `#3F3F46` mono | `#A1A1AA` mono | `--color-secondary` |
 
 ---
 
@@ -82,16 +109,16 @@
 
 ```css
 /* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap');
 
 :root {
-  --font-display: 'Space Grotesk', system-ui, sans-serif;     /* Заголовки */
+  --font-display: 'Archivo', system-ui, sans-serif;           /* Заголовки */
   --font-body:    'Space Grotesk', system-ui, sans-serif;     /* Тело текста */
   --font-mono:    'JetBrains Mono', 'Courier New', monospace; /* Технические данные */
 }
 ```
 
-> **Почему Space Grotesk**: сочетает футуристическую геометрию с хорошей читаемостью. Работает для крупных заголовков (bold) и мелкого UI-текста (regular) без потери характера.
+> **Почему Archivo & Space Grotesk**: Archivo создает сильный акцент для Oversized типографики (Hero, H1), а Space Grotesk обеспечивает отличную читаемость основного текста, сохраняя футуристическую геометрию.
 > **Почему JetBrains Mono**: идеален для технических статусов (`[STEP.02/05]`), временных меток, лейблов секций — создаёт ощущение терминала внутри белого пространства.
 
 ### Типографическая шкала
@@ -119,10 +146,10 @@
 
 | Контекст | Шрифт | Размер | Вес | Характеристики |
 |---|---|---|---|---|
-| Имя-заголовок (Hero) | `--font-display` | `--text-hero` | 700–900 | `letter-spacing: -0.05em` |
-| Заголовок секции | `--font-display` | `--text-h1` | 600–700 | `text-transform: uppercase` |
-| Подзаголовок / роль | `--font-display` | `--text-h3` | 400 | `letter-spacing: 0.1em` UPPERCASE |
-| Тело текста | `--font-body` | `--text-body` | 300–400 | `line-height: 1.6` |
+| Имя-заголовок (Hero) | `--font-display` | `--text-hero` | 900 | `letter-spacing: -0.05em` |
+| Заголовок секции | `--font-display` | `--text-h1` | 700 | `text-transform: uppercase` |
+| Подзаголовок / роль | `--font-display` | `--text-h3` | 500 | `letter-spacing: 0.1em` UPPERCASE |
+| Тело текста | `--font-body` | `--text-body` | 400 | `line-height: 1.6` |
 | Технические лейблы | `--font-mono` | `--text-xs` | 400 | `letter-spacing: 0.05em`, `color: --color-secondary` |
 | Индикатор прогресса | `--font-mono` | `--text-xs` | 500 | `[STEP.02/05]` формат |
 | Даты, временные метки | `--font-mono` | `--text-sm` | 400 | `202X – Наст.` |
@@ -161,17 +188,18 @@
 
 ## 5. Структура секций
 
-5 горизонтально скроллируемых панелей (по `100vw` каждая). Полная длина трека — `500vw`.
+Вертикальный скролл с выборочным горизонтальным движением для конкретных секций.
 
 ### Карта секций
 
-| Индекс | ID | Название | Частицы Three.js | Ключевой UI |
+| Индекс | ID | Название | Частицы Three.js (Dala-style) | Ключевой UI |
 |---|---|---|---|---|
-| 0 | `#intro` | Intro | Горизонтальная разреженная плоскость с шумом, реагирует на мышь (пустота 150px вокруг курсора) | Hero name, tagline, CTA кнопка |
+| 0 | `#intro` | Intro | Векторное поле частиц. Взгляд на видео влево: формируется пульсирующая Синяя таблетка. Взгляд вправо: Красная таблетка (Матрица). | Hero name, tagline, CTA кнопка |
 | 1 | `#education` | Education | Концентрические кольца (Detroit style), медленно вращаются | 3 блока образования |
-| 2 | `#experience` | Experience | Горизонтальная ось времени по центру, частицы пульсируют вдоль линии | Timeline с 3 позициями |
-| 3 | `#about` | About & Stack | Идеальная 3D-сфера из точек, трекбол-вращение от мыши | Tech stack grid, bio text |
-| 4 | `#contacts` | Contacts | Хаотичное облако с броуновским движением, частицы улетают к краям | Форма, соцсети |
+| 2 | `#experience` | Experience | Вертикальная ось времени по центру, частицы пульсируют вдоль линии | Timeline с 2 позициями |
+| 3 | `#about` | About & Stack | GSAP скролл-морфинг: частицы плавно трансформируются в геометрические 3D-фигуры (Сфера -> Куб -> Тор) по мере скролла карточек | Горизонтальный скролл-трек для карточек стека (Tech stack grid), bio text |
+| 4 | `#services` | Services & Cost | Упорядоченная геометрическая сетка частиц | Интерактивный калькулятор сметы |
+| 5 | `#contacts` | Contacts | Хаотичное облако с броуновским движением, частицы улетают к краям | Форма, соцсети |
 
 ---
 
@@ -207,26 +235,32 @@
 
 ### 6.2 ScrollInterfaceService (GSAP ScrollTrigger)
 
-Трансформирует вертикальный скролл в горизонтальное смещение трека.
+Трансформирует вертикальный скролл в горизонтальное смещение **только для секции "О себе" (Tech stack grid)**.
 
 **DOM-структура**:
 ```
-div#scroll-wrapper  (h-[500vh], relative)
-  └─ div#viewport   (sticky top-0, w-screen h-screen, overflow-hidden)
-       └─ div#horizontal-track  (flex, w-[500vw], will-change: transform)
-            └─ section.panel x5  (w-screen h-full flex-none)
+section.horizontal-scroll-section  (relative, min-h-[100vh])
+  └─ div.horizontal-track  (flex, will-change: transform)
+       └─ .scroll-item xN  (flex-none)
 ```
 
-**GSAP параметры**: `scrub: 1`, `pin: true`, `ease: "none"` для трека (линейный сдвиг обязателен для синхронизации с тремя сервисами)
+**GSAP параметры**: `scrub: 1`, `pin: true`, `ease: "none"` для трека
 
 > [!IMPORTANT]
+> Горизонтальный скролл применяется выборочно к конкретным секциям, не ко всей странице.
 > Никогда не перехватывать `wheel` / `mousewheel` напрямую. Только GSAP ScrollTrigger с `pin: true`.
 
 ### 6.3 VideoInteractionService (GSAP + HTML5 Video)
 
-Управляет видео-силуэтом (`/lbm.mp4`) на Intro-секции.
+Управляет видео-силуэтом на Intro-секции. Использует два видео-ассета для разных тем.
 
-**Смешивание слоёв**: контейнер видео имеет `mix-blend-mode: multiply` на белом фоне — белый цвет видео-фона исчезает, силуэт остаётся.
+**Видео-ассеты**:
+- Light theme: `/lbm.mp4` — белый фон, силуэт с белой поло-рубашкой
+- Dark theme: `/lbm_dark.mp4` — чёрный фон, тот же силуэт
+
+**Смешивание слоёв**:
+- Light theme: `mix-blend-mode: multiply` — белый фон видео исчезает на белом фоне страницы
+- Dark theme: `mix-blend-mode: screen` — чёрный фон видео исчезает на чёрном фоне страницы
 
 **Обязательные атрибуты video**: `muted`, `playsInline`, `preload="auto"`
 **Скруббинг throttle**: не чаще 30fps (`throttleMs = 33`)
@@ -234,6 +268,7 @@ div#scroll-wrapper  (h-[500vh], relative)
 
 > [!IMPORTANT]
 > `pointer-events: none` на контейнере видео — клики проходят насквозь к Three.js-сцене.
+> При переключении темы VideoInteractionService должен обновлять src видео-элемента и перезагружать видео.
 
 ---
 
@@ -328,14 +363,17 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 ```
 Position: fixed, top-0, z-50
-Background: rgba(250, 250, 250, 0.85), backdrop-blur(12px)
+Background: rgba(250, 250, 250, 0.85), backdrop-blur(12px) [light]
+Background: rgba(9, 9, 11, 0.85), backdrop-blur(12px) [dark]
 Border-bottom: 0.5px solid var(--color-border)
-Layout: flex justify-between items-center, px-12, h-[60px]
+Layout: flex justify-between items-center, px-4 md:px-8 lg:px-12, h-[60px]
 
 Логотип: font-mono text-xs tracking-widest, "DV.SYS" или инициалы
 Nav-links: font-display text-sm font-500, letter-spacing 0.05em
   Hover: color -> var(--color-accent), transition 200ms
   Active: border-bottom 1px solid var(--color-accent)
+
+Theme toggle: иконка sun/moon, position right, click переключает класс .dark на <html>
 ```
 
 ### 8.2 Индикатор прогресса скролла
@@ -389,21 +427,14 @@ Background: transparent
 Hover: border-color var(--color-accent), transition 150ms
 ```
 
-### 8.6 DotGrid (текущая реализация)
+### 8.6 Интерактивный калькулятор сметы (Services)
+Пошаговый конфигуратор (Landing / Web App / DevSecOps) с GSAP-счетчиком бюджета.
 
-Компонент `DotGrid` реализован в `src/components/ui/DotGrid/DotGrid.tsx`.
+### 8.7 ИИ Чат-бот («Cyber Assistant»)
+Плавающий Glassmorphic виджет в углу экрана, взаимодействующий с Next.js API (Gemini/OpenAI) для консультации клиентов.
 
-```
-dotSize:     4    px
-gap:         8    px
-baseColor:   #ffffff   (белые точки, невидимы на белом фоне)
-activeColor: #999999   (серые — проявляются от курсора)
-proximity:   70   px, радиус реакции
-shockRadius: 80   px, радиус взрыва
-```
-
-> [!NOTE]
-> `DotGrid` — промежуточное решение для Intro-экрана до реализации полноценного `BackgroundGraphicsService` на Three.js. После интеграции Three.js — DotGrid убирается.
+### 8.8 Cookie & 152-ФЗ РФ
+Футуристичный баннер снизу экрана для согласия на обработку персональных данных (ФЗ № 152-ФЗ).
 
 ---
 
@@ -467,11 +498,14 @@ page.tsx (Orchestrator)
 ## 12. Чеклист перед поставкой
 
 ### Visual Quality
-- [ ] Нет emoji в роли иконок (только SVG — Heroicons / Lucide)
-- [ ] Все частицы — `#DCDCDC`, фон `#FAFAFA`
-- [ ] Видео-контейнер имеет `mix-blend-mode: multiply`
+- [ ] Нет emoji в роли иконок (только SVG — Phosphor Icons или Heroicons)
+- [ ] Light: все частицы — `#DCDCDC`, фон `#FAFAFA`
+- [ ] Dark: все частицы — `#52525B`, фон `#09090B`
+- [ ] Light: видео-контейнер имеет `mix-blend-mode: multiply`, src="/lbm.mp4"
+- [ ] Dark: видео-контейнер имеет `mix-blend-mode: screen`, src="/lbm_dark.mp4"
 - [ ] `pointer-events: none` на видео-контейнере
 - [ ] Типографика: только `Space Grotesk` + `JetBrains Mono`
+- [ ] Переключатель тем в header работает корректно, сохраняет состояние в localStorage
 
 ### Animation
 - [ ] Все трансформации через `transform` / `opacity` (не `top/left/width`)

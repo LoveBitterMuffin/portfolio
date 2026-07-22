@@ -2,17 +2,20 @@
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { BackgroundGraphicsService } from '../services/BackgroundGraphicsService';
+import { useTheme } from '../contexts/ThemeContext';
 
 export interface BackgroundCanvasRef {
   updatePointer: (x: number, y: number) => void;
   resize: (width: number, height: number) => void;
   morphTo: (sectionIndex: number, progress?: number) => void;
+  setReducedMotion: (reduced: boolean) => void;
 }
 
 const BackgroundCanvas = forwardRef<BackgroundCanvasRef>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const serviceRef = useRef<BackgroundGraphicsService | null>(null);
+  const { theme } = useTheme();
 
   useImperativeHandle(ref, () => ({
     updatePointer: (x: number, y: number) => {
@@ -23,6 +26,9 @@ const BackgroundCanvas = forwardRef<BackgroundCanvasRef>((props, ref) => {
     },
     morphTo: (sectionIndex: number, progress?: number) => {
       serviceRef.current?.morphTo(sectionIndex, progress);
+    },
+    setReducedMotion: (reduced: boolean) => {
+      serviceRef.current?.setReducedMotion(reduced);
     },
   }));
 
@@ -50,9 +56,17 @@ const BackgroundCanvas = forwardRef<BackgroundCanvasRef>((props, ref) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (serviceRef.current) {
+      serviceRef.current.updateParticleColor(theme);
+    }
+  }, [theme]);
+
   return (
     <div
       ref={containerRef}
+      role="presentation"
+      aria-hidden="true"
       className="fixed inset-0 w-full h-full -z-10 pointer-events-none"
     >
       <canvas ref={canvasRef} className="block w-full h-full outline-none" />

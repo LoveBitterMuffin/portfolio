@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap');
 @import "tailwindcss";
 
 /* ============================================================
@@ -40,7 +40,7 @@
      ---------------------------------------------------------- */
 
   /* Font families */
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Archivo', system-ui, sans-serif;
   --font-body:    'Space Grotesk', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'Courier New', monospace;
 
@@ -76,6 +76,23 @@
   --space-32: 128px;
 }
 
+:root.dark {
+  /* Dark theme токены */
+  --color-background: #09090B;
+  --color-foreground: #FAFAFA;
+  --color-primary: #FAFAFA;
+  --color-on-primary: #09090B;
+  --color-secondary: #A1A1AA;
+  --color-muted: #27272A;
+  --color-border: #27272A;
+  --color-accent: #3B82F6;
+  --color-accent-hover: #60A5FA;
+  --color-particle: #52525B;
+  --color-grid-line: rgba(255, 255, 255, 0.04);
+  --color-destructive: #EF4444;
+  --color-ring: #FAFAFA;
+}
+
 /* ============================================================
    BASE STYLES
    ============================================================ */
@@ -104,6 +121,25 @@ body {
   /* overflow: hidden removed — native scroll is required for GSAP ScrollTrigger */
 }
 
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus visible styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
 /* ============================================================
    REDUCED MOTION
    CSS layer — GSAP + Three.js handle their own logic in JS
@@ -114,55 +150,39 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
 /* ============================================================
    RESPONSIVE — MOBILE LAYOUT OVERRIDES
-   On mobile (<768px) the horizontal track is replaced by a
-   normal vertical document flow.
+   On mobile (<768px) horizontal scroll sections become vertical
    ============================================================ */
 
-/* Mobile: panels behave as normal block sections */
 @media (max-width: 767px) {
-  /* Horizontal scroll wrapper becomes auto-height */
-  #scroll-wrapper {
-    height: auto !important;
-  }
-
-  /* Sticky viewport is released */
-  #viewport {
-    position: relative !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
-
-  /* Track becomes a vertical flex container */
-  #horizontal-track {
+  /* Horizontal scroll sections become vertical on mobile */
+  .horizontal-scroll-section .horizontal-track {
     flex-direction: column !important;
     width: 100% !important;
     transform: none !important;
-    will-change: auto !important;
   }
 
-  /* Each panel fills viewport height on mobile */
-  .panel {
+  .horizontal-scroll-section .scroll-item {
     width: 100% !important;
-    min-height: 100svh;
-    height: auto !important;
-    padding: var(--space-8) var(--space-6) !important;
+    min-width: auto !important;
   }
 
-  /* Intro panel specifics */
-  #intro {
-    min-height: 100svh;
+  /* Section padding adjustments for mobile */
+  section {
+    padding: var(--space-8) var(--space-6) !important;
   }
 }
 
-/* Tablet and up: restore horizontal layout */
+/* Tablet and up: section padding */
 @media (min-width: 768px) {
-  .panel {
+  section {
     padding-top: var(--space-12);
     padding-bottom: var(--space-12);
   }

@@ -107,6 +107,20 @@ export class VideoInteractionService {
     }
   }
 
+  public updateVideoSource(theme: 'light' | 'dark'): void {
+    const currentTime = this.video.currentTime;
+    const wasPlaying = !this.video.paused;
+    
+    this.video.src = theme === 'light' ? '/lbm.mp4' : '/lbm_dark.mp4';
+    this.video.load();
+    
+    // Восстановление позиции после загрузки
+    this.video.currentTime = currentTime;
+    if (wasPlaying) {
+      this.video.play().catch(() => {});
+    }
+  }
+
   public destroy(): void {
     gsap.ticker.remove(this.updateVideoFrame);
     gsap.killTweensOf(this.playheadState);

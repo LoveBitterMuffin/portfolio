@@ -83,23 +83,9 @@ const OptionWheel = ({
     soundVolume
   };
 
-  // Single rAF loop that eases the wheel position toward its target with
-  // frame-rate independent exponential smoothing, then lays every option out
-  // along the curve based on its distance from the current position.
-  const runFrame = useCallback(now => {
-    const dt = Math.min((now - lastRef.current) / 1000, 0.05);
-    lastRef.current = now;
+  const updateLayout = useCallback(() => {
     const cfg = cfgRef.current;
-    const tau = Math.max(cfg.smoothing, 1) / 1000;
-    const k = 1 - Math.exp(-dt / tau);
-
-    const target = targetRef.current;
     const cur = posRef.current;
-    let next = cur + (target - cur) * k;
-    const settled = Math.abs(target - next) < 0.001;
-    if (settled) next = target;
-    posRef.current = next;
-
     const els = itemRefs.current;
     const n = cfg.count;
     const mirror = cfg.side === 'right' ? -1 : 1;
@@ -110,7 +96,7 @@ const OptionWheel = ({
     for (let i = 0; i < n; i++) {
       const el = els[i];
       if (!el) continue;
-      let d = i - next;
+      let d = i - cur;
       if (cfg.loop && n > 1) {
         d = ((d % n) + n) % n;
         if (d > n / 2) d -= n;
@@ -130,9 +116,33 @@ const OptionWheel = ({
       el.style.filter = cfg.blur > 0 ? `blur(${(dist * cfg.blur).toFixed(2)}px)` : 'none';
       el.style.setProperty('--ow-p', Math.max(0, 1 - Math.min(dist, 1)).toFixed(4));
     }
+  }, []);
+
+  // Single rAF loop that eases the wheel position toward its target with
+  // frame-rate independent exponential smoothing.
+  const runFrame = useCallback(now => {
+    const dt = Math.min((now - lastRef.current) / 1000, 0.05);
+    lastRef.current = now;
+    const cfg = cfgRef.current;
+    const tau = Math.max(cfg.smoothing, 1) / 1000;
+    const k = 1 - Math.exp(-dt / tau);
+
+    const target = targetRef.current;
+    const cur = posRef.current;
+    let next = cur + (target - cur) * k;
+    const settled = Math.abs(target - next) < 0.001;
+    if (settled) next = target;
+    posRef.current = next;
+
+    updateLayout();
 
     rafRef.current = settled ? null : requestAnimationFrame(runFrame);
-  }, []);
+  }, [updateLayout]);
+
+  // Position items on every render/update to prevent overlapping
+  useEffect(() => {
+    updateLayout();
+  });
 
   const startLoop = useCallback(() => {
     if (rafRef.current != null) return;

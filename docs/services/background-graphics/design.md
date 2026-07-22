@@ -263,6 +263,8 @@ void main() {
 ### Fragment Shader
 
 ```glsl
+uniform vec3 uColor; // Цвет частиц (задаётся из JS)
+
 void main() {
     // Идеальный сглаженный круг вместо квадратной точки
     float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
@@ -273,11 +275,34 @@ void main() {
     // Мягкое сглаживание краёв
     float strength = 1.0 - smoothstep(0.4, 0.5, distanceToCenter);
 
-    // Минималистичный платиновый цвет (#dcdcdc)
-    vec3 color = vec3(0.86, 0.86, 0.86);
-
-    gl_FragColor = vec4(color, strength * 0.8);
+    // Цвет частиц из юниформы (Light: #DCDCDC, Dark: #52525B)
+    gl_FragColor = vec4(uColor, strength * 0.8);
 }
+```
+
+### Поддержка тёмной темы
+
+Для поддержки переключения тем добавьте метод в `BackgroundGraphicsService`:
+
+```typescript
+public updateParticleColor(theme: 'light' | 'dark'): void {
+  const color = theme === 'light' ? new THREE.Color(0xDCDCDC) : new THREE.Color(0x52525B);
+  this.particleMaterial.uniforms.uColor.value.copy(color);
+}
+```
+
+Инициализация юниформы цвета в конструкторе:
+
+```typescript
+this.particleMaterial = new THREE.ShaderMaterial({
+  // ... другие параметры
+  uniforms: {
+    uTime: { value: 0 },
+    uMorphProgress: { value: 0 },
+    uPointer: { value: new THREE.Vector2(0, 0) },
+    uColor: { value: new THREE.Color(0xDCDCDC) }, // Light theme по умолчанию
+  },
+});
 ```
 
 > **Примечание:** `vDistanceToPointer` (varying) исключён из шейдеров — он не использовался. Если в будущем потребуется tinting частиц вблизи курсора, его нужно добавить обратно.
