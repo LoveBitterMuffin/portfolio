@@ -87,6 +87,9 @@ FULL-STACK DEVELOPER & DEVSECOPS ENGINEER
 ### Section Header
 СТОИМОСТЬ УСЛУГ // COST OF SERVICES
 
+### Navigation Controller
+- **OptionWheel (Центральный интерактивный штурвал):** Используется для динамического выбора категории услуг и параметров сметы в парящем интерфейсе.
+
 ### Services List
 - **Web Development / Создание сайтов:** по договоренности (включает интерактивную смету)
 - **DevSecOps & Консалтинг:** по договоренности
