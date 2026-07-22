@@ -757,10 +757,10 @@ export default function Page() {
 
       {/* ── Global Side HUD Controller (OptionWheel Штурвал Навигации) ──────── */}
       <div
-        className="fixed right-4 top-1/2 -translate-y-1/2 w-[240px] sm:w-[280px] h-[360px] z-40 pointer-events-none hidden md:block"
+        className="fixed right-0 top-1/2 -translate-y-1/2 w-[280px] sm:w-[320px] h-[400px] z-40 pointer-events-none hidden md:block"
         aria-label="Navigation Wheel HUD"
       >
-        <div className="w-full h-full relative pointer-events-auto rounded-l-2xl border-l border-y border-border/30 bg-black/40 backdrop-blur-md overflow-hidden flex items-center shadow-2xl">
+        <div className="w-full h-full relative pointer-events-auto bg-transparent overflow-hidden flex items-center">
           <OptionWheel
             items={[...SECTIONS]}
             defaultSelected={0}
@@ -771,10 +771,12 @@ export default function Page() {
               }
             }}
             side="right"
-            fontSize={1.3}
-            curve={1.3}
+            fontSize={1.6}
+            curve={1.2}
             tilt={10}
-            inset={24}
+            inset={40}
+            textColor="var(--color-secondary)"
+            activeColor="var(--color-primary)"
             wheelPassthrough={true}
           />
         </div>
