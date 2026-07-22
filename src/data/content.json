@@ -2,7 +2,7 @@
   "intro": {
     "title": "Dmitry\nVolkov",
     "subtitle": "FULL-STACK DEVELOPER & DEVSECOPS ENGINEER",
-    "tagline": "Архитектура безопасности. Эстетика кода. Педагогика будущего.",
+    "tagline": "Архитектура безопасных систем. Бескомпромиссная эстетика фронтенда & DevSecOps.",
     "cta": "Исследовать систему"
   },
   "education": {
@@ -37,20 +37,13 @@
         "details": [
           "Frontend-мастерская: React, Next.js, Tailwind CSS.",
           "Backend-мастерская: Node.js, базы данных, API.",
-          "Кружки: Визуальное программирование, ИИ в действии, Компьютерная грамотность."
+          "IT-инжиниринг: инфраструктурные модули, автоматизация процессов."
         ],
         "focus": ""
       },
       {
-        "role": "Репетитор ЕГЭ по информатике",
-        "focus": "Подготовка к экзаменам, алгоритмизация, разбор задач высокой сложности.",
-        "place": "",
-        "period": "",
-        "details": []
-      },
-      {
-        "role": "Freelance Web Developer",
-        "focus": "Полный цикл разработки веб-приложений. От прототипа в Figma до деплоя на Kubernetes. Оптимизация Core Web Vitals, SEO-аудит, автоматизация тестирования.",
+        "role": "Freelance Web Developer / DevSecOps Engineer",
+        "focus": "Полный цикл разработки веб-приложений. От архитектуры в Figma до деплоя на Kubernetes. Оптимизация Core Web Vitals, глубокий аудит по OWASP, настройка CI/CD Pipeline, Vault, автоматизация тестирования.",
         "place": "",
         "period": "",
         "details": []
@@ -92,9 +85,9 @@
   "services": {
     "header": "СТОИМОСТЬ УСЛУГ // COST OF SERVICES",
     "items": [
-      { "title": "Web Development / Создание сайтов", "price": "по договоренности" },
+      { "title": "Web Development / Создание сайтов", "price": "по договоренности (включает интерактивную смету)" },
       { "title": "DevSecOps & Консалтинг", "price": "по договоренности" },
-      { "title": "Преподавание / Репетиторство", "price": "по договоренности" }
+      { "title": "Аудит безопасности & Код-ревью", "price": "по договоренности" }
     ]
   },
   "contacts": {
