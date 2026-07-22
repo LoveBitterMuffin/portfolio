@@ -19,6 +19,7 @@ const DEFAULT_ITEMS = [
 const OptionWheel = ({
   items = DEFAULT_ITEMS,
   defaultSelected = 3,
+  selected = null,
   onChange = (index, item) => {},
   onItemClick = (index, item) => {},
   textColor = '#a6a6a6',
@@ -279,6 +280,14 @@ const OptionWheel = ({
     },
     [applyTarget]
   );
+
+  useEffect(() => {
+    if (selected !== null && selected !== undefined && selected >= 0) {
+      if (selectedRef.current !== selected) {
+        applyTarget(selected, true);
+      }
+    }
+  }, [selected, applyTarget]);
 
   useEffect(() => {
     applyTarget(targetRef.current, false);
