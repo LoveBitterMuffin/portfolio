@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useImperativeHandle, forwardRef } from 'react';
-import OptionWheel from './OptionWheel';
 import { CtaButton } from './ui/CtaButton/CtaButton';
 import contentData from '../data/content.json';
 import { useTheme } from '../contexts/ThemeContext';
@@ -9,7 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 /** Public API exposed to the parent Orchestrator via ref */
 export interface IntroPanelHandle {
   /** The root DOM element — lets Orchestrator register this as panel[0] */
-  containerEl: HTMLDivElement | null;
+  containerEl: HTMLElement | null;
   /** Video element for VideoInteractionService */
   videoEl: HTMLVideoElement | null;
   /** Video container element for VideoInteractionService parallax */
@@ -24,7 +23,7 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
   { onNavClick },
   ref
 ) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
@@ -39,7 +38,7 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
   const { title, subtitle, tagline, cta } = contentData.intro;
 
   return (
-    <div
+    <section
       ref={containerRef}
       id="intro"
       className="relative w-screen min-h-screen flex items-center justify-center overflow-hidden"
@@ -51,7 +50,7 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
           className="font-mono text-xs tracking-widest uppercase mb-4"
           style={{ color: 'var(--color-secondary)', letterSpacing: 'var(--tracking-ui)' }}
         >
-          [STEP.01/05] — Intro
+          [SYSTEM ONLINE] — CREATIVE ARCHITECT
         </p>
         <h1
           className="font-display font-bold leading-none whitespace-pre-line"
@@ -101,35 +100,7 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
         />
       </div>
 
-      {/* OptionWheel Navigator */}
-      <div className="absolute inset-0 flex items-center justify-end z-30 pointer-events-none">
-        <div className="w-[400px] h-full pointer-events-auto">
-          <OptionWheel
-            items={['Intro', 'Education', 'Experience', 'About', 'Contacts']}
-            defaultSelected={0}
-            textColor={theme === 'light' ? '#bbbbbb' : '#a1a1aa'}
-            activeColor={theme === 'light' ? '#000000' : '#ffffff'}
-            side="right"
-            fontSize={4}
-            spacing={1.4}
-            curve={0.35}
-            tilt={6}
-            blur={2}
-            fade={0.25}
-            minOpacity={0.2}
-            smoothing={200}
-            inset={80}
-            loop={false}
-            draggable
-            wheelPassthrough
-            soundUrl="/assets/sounds/click-soft.mp3"
-            soundVolume={0.5}
-            onItemClick={(index: number) => {
-              if (onNavClick) onNavClick(index);
-            }}
-          />
-        </div>
-      </div>
+
 
       {/* Scroll hint */}
       <div
@@ -138,7 +109,7 @@ const IntroPanel = forwardRef<IntroPanelHandle, IntroPanelProps>(function IntroP
       >
         scroll ↓
       </div>
-    </div>
+    </section>
   );
 });
 
