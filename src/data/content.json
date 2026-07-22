@@ -83,11 +83,48 @@
     "bio": "Я объединяю строгость инженерной безопасности с гибкостью современного фронтенда. Мой подход — это не просто написание кода, а создание отказоустойчивых, быстрых и визуально совершенных цифровых продуктов. Опыт в педагогике позволяет мне видеть проект глазами пользователя, а бэкграунд в DevSecOps гарантирует его надежность."
   },
   "services": {
-    "header": "СТОИМОСТЬ УСЛУГ // COST OF SERVICES",
+    "header": "УСЛУГИ // SERVICES & SOLUTIONS",
     "items": [
-      { "title": "Web Development / Создание сайтов", "price": "по договоренности (включает интерактивную смету)" },
-      { "title": "DevSecOps & Консалтинг", "price": "по договоренности" },
-      { "title": "Аудит безопасности & Код-ревью", "price": "по договоренности" }
+      {
+        "id": "web-dev",
+        "title": "Web Development & Web Engines",
+        "subtitle": "Высоконагруженные веб-приложения & SPA",
+        "description": "Проектирование и разработка современных веб-сервисов с акцентом на скорость, SEO и отзывчивость.",
+        "deliverables": ["Next.js / React Architecture", "GSAP & Three.js 3D/FX", "Core Web Vitals 95+"],
+        "price": "по договоренности"
+      },
+      {
+        "id": "devsecops",
+        "title": "DevSecOps & Cloud Infrastructure",
+        "subtitle": "Оркестрация, безопасность & CI/CD",
+        "description": "Построение надежных CI/CD пайплайнов, контейнеризация приложений и зашифрованное управление секретами.",
+        "deliverables": ["Kubernetes & Docker Swarm", "GitLab CI / GitHub Actions", "Vault & Secrets Management"],
+        "price": "по договоренности"
+      },
+      {
+        "id": "security-audit",
+        "title": "Security Audit & Code Review",
+        "subtitle": "Аудит по OWASP Top 10",
+        "description": "Комплексный анализ исходного кода, выявление уязвимостей и повышение устойчивости инфраструктуры.",
+        "deliverables": ["Static/Dynamic Analysis (SAST/DAST)", "OWASP Compliance", "План ликвидации угроз"],
+        "price": "по договоренности"
+      },
+      {
+        "id": "interactive-3d",
+        "title": "Interactive 3D & Canvas FX",
+        "subtitle": "Three.js & WebGL рендеринг",
+        "description": "Интерактивные 3D-сцены, генеративные частицы и кастомные шейдеры для премиального UX.",
+        "deliverables": ["Custom WebGL Shaders", "GSAP ScrollTrigger sync", "GPU Optimization"],
+        "price": "по договоренности"
+      },
+      {
+        "id": "consulting",
+        "title": "Technical Consulting & Mentorship",
+        "subtitle": "Архитектурный консалтинг",
+        "description": "Экспертное сопровождение команд, аудит архитектурных решений и менторство разработчиков.",
+        "deliverables": ["Code Review", "Инфраструктурная карта", "Обучение команды"],
+        "price": "по договоренности"
+      }
     ]
   },
   "contacts": {
