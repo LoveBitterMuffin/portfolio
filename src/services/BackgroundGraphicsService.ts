@@ -406,31 +406,59 @@ export class BackgroundGraphicsService {
       laptopPositions[i * 3 + 2] = rot[2];
     }
 
-    // 5. Contacts: Paper Airplane / Mail (Folded 3D paper plane pointing up - rotated)
-    const paperPlanePositions = new Float32Array(count * 3);
+    // 5. Contacts: Envelope / Mail (Rectangular body with folded flaps - rotated)
+    const envelopePositions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       let px = 0, py = 0, pz = 0;
-      const t = Math.random();
-      const side = Math.random() > 0.5 ? 1 : -1;
       const part = Math.random();
+      
+      const width = 5.0;
+      const height = 3.2;
 
-      if (part < 0.70) {
-        px = side * (t * 3.2);
-        py = 2.5 - t * 4.5;
-        pz = side * (t * 0.8);
-        px += (Math.random() - 0.5) * 0.1;
-        pz += (Math.random() - 0.5) * 0.1;
+      if (part < 0.5) {
+        // Main rectangular body (front and back)
+        px = (Math.random() - 0.5) * width;
+        py = (Math.random() - 0.5) * height;
+        pz = (Math.random() - 0.5) * 0.3; // slight thickness
+      } else if (part < 0.75) {
+        // Top triangle flap
+        const u = Math.random() - 0.5;
+        const v = Math.random(); 
+        const vScaled = Math.sqrt(v); // uniform triangle distribution
+        
+        const baseX = u * width;
+        const baseY = height / 2;
+        
+        const tipX = 0;
+        const tipY = -0.2; // tip slightly below center
+        
+        px = baseX * (1 - vScaled) + tipX * vScaled;
+        py = baseY * (1 - vScaled) + tipY * vScaled;
+        pz = 0.2 + (Math.random() - 0.5) * 0.1; // top flap sits slightly in front
       } else {
-        py = 2.5 - t * 4.5;
-        pz = -t * 1.2;
-        px = (Math.random() - 0.5) * 0.2;
+        // Bottom triangle flap
+        const u = Math.random() - 0.5;
+        const v = Math.random();
+        const vScaled = Math.sqrt(v);
+        
+        const baseX = u * width;
+        const baseY = -height / 2;
+        
+        const tipX = 0;
+        const tipY = 0.2;
+        
+        px = baseX * (1 - vScaled) + tipX * vScaled;
+        py = baseY * (1 - vScaled) + tipY * vScaled;
+        pz = 0.15 + (Math.random() - 0.5) * 0.1;
       }
-      let rot = rotateZ(px, py, pz, -15 * Math.PI / 180);
-      rot = rotateY(rot[0], rot[1], rot[2], -40 * Math.PI / 180);
+      
+      // Rotate Envelope: Z = -10 deg, Y = -25 deg, X = 15 deg
+      let rot = rotateZ(px, py, pz, -10 * Math.PI / 180);
+      rot = rotateY(rot[0], rot[1], rot[2], -25 * Math.PI / 180);
       rot = rotateX(rot[0], rot[1], rot[2], 15 * Math.PI / 180);
-      paperPlanePositions[i * 3 + 0] = rot[0];
-      paperPlanePositions[i * 3 + 1] = rot[1];
-      paperPlanePositions[i * 3 + 2] = rot[2];
+      envelopePositions[i * 3 + 0] = rot[0];
+      envelopePositions[i * 3 + 1] = rot[1];
+      envelopePositions[i * 3 + 2] = rot[2];
     }
 
     // Matrix Pill ('pill') - Two Capsules for Intro (volumetric, rotated)
@@ -483,7 +511,7 @@ export class BackgroundGraphicsService {
       briefcasePositions,      // 2: Experience
       humanBustPositions,      // 3: About
       laptopPositions,         // 4: Services
-      paperPlanePositions,     // 5: Contacts
+      envelopePositions,     // 5: Contacts
     ];
 
     this.namedGeometries = {
@@ -492,7 +520,7 @@ export class BackgroundGraphicsService {
       'briefcase': briefcasePositions,
       'human': humanBustPositions,
       'laptop': laptopPositions,
-      'plane': paperPlanePositions,
+      'plane': envelopePositions,
       'pill': pillPositions,
     };
   }
