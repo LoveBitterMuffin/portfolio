@@ -20,12 +20,25 @@ import { ScrollProgressIndicator } from '../components/ui/ScrollProgressIndicato
 import { TimelineItem } from '../components/ui/TimelineItem/TimelineItem';
 import { SkillTag } from '../components/ui/SkillTag/SkillTag';
 import { CtaButton } from '../components/ui/CtaButton/CtaButton';
+import OptionWheel from '../components/OptionWheel';
 
 const BackgroundCanvas = dynamic(() => import('../components/BackgroundCanvas'), { ssr: false });
 
 gsap.registerPlugin(useGSAP, ScrollToPlugin);
 
-const SECTIONS = ['Intro', 'Education', 'Experience', 'About', 'Services', 'Contacts'] as const;
+// Nav sections (excludes Intro/Promo — they are not user-navigable)
+const SECTIONS = ['About', 'Experience', 'Services', 'Education', 'Contacts'] as const;
+
+// Map section HTML id → BGS positions array index
+const SECTION_ID_TO_INDEX: Record<string, number> = {
+  intro:      0,
+  promo:      1,
+  about:      2,
+  experience: 3,
+  services:   4,
+  education:  5,
+  contacts:   6,
+};
 
 export default function Page() {
   // ── DOM refs ──────────────────────────────────────────────────────────────
@@ -41,8 +54,9 @@ export default function Page() {
   const prevSectionRef = useRef<number>(0);
 
   // ── UI state (only what needs to re-render) ───────────────────────────────
-  const [activeSection, setActiveSection] = useState(0);
-  const activeSectionRef = useRef<number>(0);
+  const [activeSection, setActiveSection] = useState(-1);
+  const activeSectionRef = useRef<number>(-1);
+  const [activeServiceIndex, setActiveServiceIndex] = useState(0);
   const { theme } = useTheme();
 
   // ── Mobile detection (SSR-safe, updated on mount) ───────────────────────────
@@ -62,7 +76,7 @@ export default function Page() {
     videoServiceRef.current?.updatePointer(e.clientX, e.clientY);
 
     // Matrix Pill logic on intro section
-    if (activeSectionRef.current === 0) {
+    if (activeSectionRef.current === -1) {
       const progressX = e.clientX / window.innerWidth;
       if (progressX < 0.4 || progressX > 0.6) {
         backgroundCanvasRef.current?.morphToGeometry('pill');
@@ -103,7 +117,7 @@ export default function Page() {
           items,
           (progress) => {
             // Update background morphing based on about scroll
-            backgroundCanvasRef.current?.morphTo(3, progress);
+            backgroundCanvasRef.current?.morphAboutTrack(progress);
           }
         );
       }
@@ -137,16 +151,24 @@ export default function Page() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const sectionId = entry.target.id;
-            const sectionIndex = SECTIONS.findIndex(s => s.toLowerCase() === sectionId);
-            if (sectionIndex !== -1) {
-              setActiveSection(sectionIndex);
-              activeSectionRef.current = sectionIndex;
-              
-              if (sectionIndex === 0) {
-                // Ensure section color and state are reset to Intro
+            const bgsIndex = SECTION_ID_TO_INDEX[sectionId];
+            
+            // Update active nav section (only for the 5 navigable sections)
+            const navIndex = SECTIONS.findIndex(s => s.toLowerCase() === sectionId);
+            if (navIndex !== -1) {
+              setActiveSection(navIndex);
+              activeSectionRef.current = navIndex;
+            } else {
+              // intro or promo: no nav section active
+              setActiveSection(-1);
+              activeSectionRef.current = -1;
+            }
+
+            if (bgsIndex !== undefined) {
+              if (sectionId === 'intro') {
+                // Reset to Intro grid
                 backgroundCanvasRef.current?.morphTo(0);
-                
-                // Restore morph based on current mouse position
+                // Restore pill based on current mouse position
                 const progressX = lastClientXRef.current / window.innerWidth;
                 if (progressX < 0.4 || progressX > 0.6) {
                   backgroundCanvasRef.current?.setPillMode(true);
@@ -155,15 +177,14 @@ export default function Page() {
                   backgroundCanvasRef.current?.setPillMode(false);
                 }
               } else {
-                // Clear any pill mode / color overrides from intro
                 backgroundCanvasRef.current?.setPillMode(false);
-                backgroundCanvasRef.current?.morphTo(sectionIndex);
+                backgroundCanvasRef.current?.morphTo(bgsIndex);
               }
             }
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.3 }
     );
 
     document.querySelectorAll('section[id]').forEach(section => {
@@ -184,6 +205,7 @@ export default function Page() {
 
   // ── Navigate to section on nav click ──────────────────────────────────────
   const handleNavClick = useCallback((index: number) => {
+    // SECTIONS = ['About','Experience','Services','Education','Contacts']
     const section = document.getElementById(SECTIONS[index].toLowerCase());
     if (section) {
       section.scrollIntoView({ behavior: 'smooth' });
@@ -211,59 +233,193 @@ export default function Page() {
         {/* Section 0 — Intro */}
         <IntroPanel ref={introPanelRef} onNavClick={handleNavClick} />
 
-        {/* Section 1 — Education */}
+        {/* Section 1 — Promo (Cosmic Transition) */}
         <section
-          id="education"
-          className="min-h-screen flex items-center"
-          style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
+          id="promo"
+          className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+          style={{ background: 'transparent' }}
         >
-              <div className="max-w-4xl" data-speed="0.2">
-                <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary animate-entrance">
-                  [STEP.02/06] — Education
-                </p>
-                <h2 className="font-display font-bold uppercase mb-16 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
-                  {contentData.education.header}
-                </h2>
-                
-                <div className="flex flex-col gap-12">
-                  {contentData.education.items.map((item, idx) => (
-                    <div key={idx} className="border-l border-border pl-8 relative animate-entrance" data-speed={(0.1 * (idx + 1)).toString()}>
-                      <div className="absolute w-2 h-2 rounded-full bg-primary -left-[4px] top-2" />
-                      <div className="flex items-start gap-4 mb-3">
-                        {item.logo && (
-                          <div
-                            className="shrink-0 flex items-center justify-center"
-                            style={{
-                              width: '48px',
-                              height: '48px',
-                              background: 'var(--color-surface, #f4f4f4)',
-                              border: '0.5px solid var(--color-border)',
-                              padding: '6px',
-                            }}
-                          >
-                            <Image
-                              src={item.logo}
-                              alt={item.institution}
-                              width={36}
-                              height={36}
-                              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
-                              unoptimized
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <h3 className="font-display font-semibold text-xl mb-1 text-primary">{item.institution}</h3>
-                          <p className="font-mono text-sm text-secondary uppercase tracking-wider">{item.specialty}</p>
-                        </div>
-                      </div>
-                      <p className="font-body text-secondary leading-relaxed max-w-2xl">{item.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-8 max-w-6xl mx-auto">
+            <p
+              className="font-mono text-xs tracking-widest uppercase mb-10"
+              style={{ color: 'var(--color-secondary)', letterSpacing: '0.25em' }}
+            >
+              PROMO — CREATIVE ARCHITECT
+            </p>
+            <h2
+              className="font-display font-bold uppercase leading-none tracking-tight"
+              style={{
+                fontSize: 'clamp(2.5rem, 7vw, 6.5rem)',
+                color: 'var(--color-primary)',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.05',
+              }}
+            >
+              CRAFTING
+              <br />
+              <span style={{ color: 'var(--color-accent)' }}>HIGH-IMPACT</span>
+              <br />
+              DIGITAL EXPERIENCES
+              <br />
+              &amp; INTERACTIVE
+              <br />
+              WEB ENGINES
+            </h2>
+            <div
+              className="mt-14 w-px"
+              style={{ height: '80px', background: 'linear-gradient(to bottom, var(--color-accent), transparent)' }}
+            />
+          </div>
         </section>
 
-        {/* Section 2 — Experience */}
+        {/* Section 2 — About (Horizontal Scroll) */}
+        <section
+          ref={aboutSectionRef}
+          id="about"
+          className="horizontal-scroll-section min-h-screen flex flex-col justify-center relative overflow-hidden py-8"
+          style={{ background: 'transparent' }}
+        >
+          <div className="w-full">
+            <div className="px-[10vw] mb-8">
+              <p className="font-mono text-xs mb-3 tracking-widest uppercase text-secondary animate-entrance">
+                [STEP.01/05] — About
+              </p>
+              <h2 className="font-display font-bold uppercase text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
+                {contentData.about.header}
+              </h2>
+            </div>
+            
+            <div className="relative w-full">
+              {/* Horizontal guide line */}
+              <div className="absolute top-[50%] left-0 w-[200vw] h-px border-b border-dashed border-border/40 pointer-events-none" />
+              
+              {/* Horizontal scroll track */}
+              <div
+                ref={aboutTrackRef}
+                className="horizontal-track flex gap-12 md:gap-16 px-[10vw] relative z-10 will-change-transform items-stretch"
+              >
+                {/* Card 1 — Bio & Vision */}
+                <div
+                  ref={setAboutItemRef(0)}
+                  className="scroll-item min-w-[320px] w-[80vw] max-w-[500px] flex-none rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 md:p-10 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40"
+                  data-speed="0.1"
+                >
+                  <div>
+                    <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
+                      <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
+                        [01 / 03] — VISION
+                      </span>
+                      <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
+                        SHAPE: SPHERE
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-2xl font-bold uppercase text-primary mb-6">
+                      Философия & Подход
+                    </h3>
+
+                    <p className="font-body text-base text-secondary leading-relaxed mb-6">
+                      {contentData.about.bio}
+                    </p>
+                  </div>
+
+                  <div className="pt-6 border-t border-border/40 flex items-center justify-between text-xs font-mono text-secondary">
+                    <span>3D GEOMETRY SYNCHRONIZED</span>
+                    <span className="text-primary font-bold">● LIVE SCRUB</span>
+                  </div>
+                </div>
+
+                {/* Card 2 — Skills & Tech Stack */}
+                <div
+                  ref={setAboutItemRef(1)}
+                  className="scroll-item min-w-[360px] w-[85vw] max-w-[620px] flex-none rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 md:p-10 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40"
+                  data-speed="0.25"
+                >
+                  <div>
+                    <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
+                      <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
+                        [02 / 03] — TECH STACK
+                      </span>
+                      <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
+                        SHAPE: CUBE
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-2xl font-bold uppercase text-primary mb-6">
+                      Навыки & Технологии
+                    </h3>
+
+                    <div className="flex flex-col gap-6">
+                      {Object.entries(contentData.about.skills).map(([key, category]) => (
+                        <div key={key}>
+                          <h4 className="font-display text-xs uppercase tracking-widest text-primary/80 mb-3 font-semibold">
+                            {category.title}
+                          </h4>
+                          <div className="flex flex-wrap gap-2.5">
+                            {category.items.map((item, i) => (
+                              <SkillTag key={i}>{item}</SkillTag>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-border/40 flex items-center justify-between text-xs font-mono text-secondary mt-6">
+                    <span>STRUCTURED ENGINE</span>
+                    <span className="text-primary font-bold">GSAP + THREE.JS</span>
+                  </div>
+                </div>
+
+                {/* Card 3 — Profile & Visual Frame */}
+                <div
+                  ref={setAboutItemRef(2)}
+                  className="scroll-item min-w-[300px] w-[80vw] max-w-[480px] flex-none rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 md:p-10 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40"
+                  data-speed="0.4"
+                >
+                  <div>
+                    <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
+                      <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
+                        [03 / 03] — IDENTITY
+                      </span>
+                      <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
+                        SHAPE: TORUS
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center">
+                      <div
+                        className="relative w-full max-w-[260px] aspect-[3/4] rounded-xl border border-border overflow-hidden mb-6 shadow-inner group"
+                      >
+                        <Image
+                          src="/preview-my-photo.jpg"
+                          alt="Dmitry Volkov"
+                          fill
+                          style={{ objectFit: 'cover', objectPosition: 'top' }}
+                          sizes="260px"
+                          className="transition-transform duration-500 group-hover:scale-105"
+                          unoptimized
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 pointer-events-none" />
+                      </div>
+
+                      <p className="font-mono text-xs text-center tracking-wider text-secondary uppercase">
+                        Dmitry Volkov — Creative Developer
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-border/40 flex items-center justify-between text-xs font-mono text-secondary">
+                    <span>CONTINUOUS EVOLUTION</span>
+                    <span className="text-primary font-bold">TORUS LOOP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3 — Experience */}
         <section
           id="experience"
           className="min-h-screen flex items-center relative overflow-hidden"
@@ -271,7 +427,7 @@ export default function Page() {
         >
           <div className="w-full max-w-4xl">
             <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary">
-              [STEP.03/06] — Experience
+              [STEP.02/05] — Experience
             </p>
             <h2 className="font-display font-bold uppercase mb-16 text-primary" style={{ fontSize: 'var(--text-h1)' }}>
               {contentData.experience.header}
@@ -298,113 +454,148 @@ export default function Page() {
           </div>
         </section>
 
-        {/* Section 3 — About (Horizontal Scroll) */}
+        {/* Section 4 — Services (Interactive OptionWheel Controller) */}
         <section
-          ref={aboutSectionRef}
-          id="about"
-          className="horizontal-scroll-section min-h-screen flex items-center relative overflow-hidden"
-          style={{ background: 'transparent' }}
+          id="services"
+          className="min-h-screen flex flex-col justify-center relative overflow-hidden py-16"
+          style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
         >
-          <div className="w-full px-[10vw]">
-            <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary animate-entrance">
-              [STEP.04/06] — About
+          <div className="w-full max-w-6xl mx-auto">
+            <p className="font-mono text-xs mb-4 tracking-widest uppercase text-secondary animate-entrance">
+              [STEP.03/05] — Services & Solutions
             </p>
-            <h2 className="font-display font-bold uppercase mb-16 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
-              {contentData.about.header}
+            <h2 className="font-display font-bold uppercase mb-12 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
+              {contentData.services.header}
             </h2>
-            
-            <div className="relative">
-              <div className="absolute top-[50%] left-0 w-[150vw] h-px border-b border-dashed border-border" />
-              
-              {/* Horizontal scroll track */}
-              <div
-                ref={aboutTrackRef}
-                className="horizontal-track flex gap-24 relative z-10 will-change-transform items-center"
-              >
-                {/* Column 1 — Bio */}
-                <div ref={setAboutItemRef(0)} className="scroll-item min-w-[300px] w-[350px] flex-none" data-speed="0.1">
-                  <p className="font-body text-lg text-secondary leading-relaxed animate-entrance">
-                    {contentData.about.bio}
-                  </p>
-                </div>
 
-                {/* Column 2 — Skills */}
-                <div ref={setAboutItemRef(1)} className="scroll-item min-w-[350px] w-[400px] flex-none flex flex-col gap-10" data-speed="0.25">
-                  {Object.entries(contentData.about.skills).map(([key, category]) => (
-                    <div key={key} className="animate-entrance">
-                      <h3 className="font-display text-sm uppercase tracking-widest text-primary mb-4 border-b border-border pb-2 inline-block">
-                        {category.title}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+              {/* Left Column: Interactive OptionWheel */}
+              <div className="lg:col-span-5 h-[380px] sm:h-[420px] relative rounded-2xl border border-border/40 bg-surface/20 backdrop-blur-md overflow-hidden flex items-center shadow-2xl">
+                <OptionWheel
+                  items={contentData.services.items.map((item) => item.title)}
+                  defaultSelected={0}
+                  onChange={(index) => setActiveServiceIndex(index)}
+                  side="left"
+                  fontSize={isMobile ? 1.2 : 1.5}
+                  curve={1.1}
+                  tilt={7}
+                  inset={isMobile ? 24 : 40}
+                />
+              </div>
+
+              {/* Right Column: Dynamic Service Detail Card */}
+              <div className="lg:col-span-7 flex flex-col justify-between min-h-[380px] rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 sm:p-10 shadow-2xl transition-all duration-300">
+                {contentData.services.items[activeServiceIndex] && (
+                  <div className="flex flex-col justify-between h-full">
+                    <div>
+                      <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
+                        <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
+                          [SERVICE.0{activeServiceIndex + 1} / 0{contentData.services.items.length}]
+                        </span>
+                        <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
+                          {contentData.services.items[activeServiceIndex].price}
+                        </span>
+                      </div>
+
+                      <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-primary mb-2">
+                        {contentData.services.items[activeServiceIndex].title}
                       </h3>
-                      <div className="flex flex-wrap gap-3">
-                        {category.items.map((item, i) => (
-                          <SkillTag key={i}>{item}</SkillTag>
-                        ))}
+                      <p className="font-mono text-xs text-accent uppercase tracking-wider mb-6">
+                        {contentData.services.items[activeServiceIndex].subtitle}
+                      </p>
+
+                      <p className="font-body text-base text-secondary leading-relaxed mb-8">
+                        {contentData.services.items[activeServiceIndex].description}
+                      </p>
+
+                      <div className="mb-8">
+                        <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80 mb-3 font-semibold">
+                          Ключевые результаты / Deliverables:
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {contentData.services.items[activeServiceIndex].deliverables.map((item, idx) => (
+                            <span
+                              key={idx}
+                              className="font-mono text-xs px-3 py-1.5 rounded-sm border border-border/60 bg-surface/80 text-primary"
+                            >
+                              ✓ {item}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {/* Column 3 — Photo */}
-                <div ref={setAboutItemRef(2)} className="scroll-item min-w-[280px] flex-none flex items-center justify-center" data-speed="0.4">
-                  <div
-                    className="animate-entrance"
-                    style={{
-                      position: 'relative',
-                      width: '280px',
-                      aspectRatio: '3/4',
-                      border: '0.5px solid var(--color-border)',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Image
-                      src="/preview-my-photo.jpg"
-                      alt="Dmitry Volkov"
-                      fill
-                      style={{ objectFit: 'cover', objectPosition: 'top' }}
-                      sizes="280px"
-                      unoptimized
-                    />
+                    <div className="pt-6 border-t border-border/40 flex items-center justify-between mt-4">
+                      <span className="font-mono text-xs text-secondary">
+                        CONTROLLER: OPTIONWHEEL ACTIVE
+                      </span>
+                      <a
+                        href="#contacts"
+                        className="font-mono text-xs uppercase tracking-wider px-5 py-2.5 rounded border border-accent bg-accent/10 text-primary hover:bg-accent hover:text-black transition-all duration-200 font-semibold"
+                      >
+                        Запросить расчет →
+                      </a>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Section 4.5 — Services */}
+        {/* Section 5 — Education */}
         <section
-          id="services"
-          className="min-h-screen flex items-center relative overflow-hidden"
+          id="education"
+          className="min-h-screen flex items-center"
           style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
         >
-          <div className="w-full max-w-4xl" data-speed="0.2">
+          <div className="max-w-4xl" data-speed="0.2">
             <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary animate-entrance">
-              [STEP.05/06] — Services
+              [STEP.04/05] — Education
             </p>
             <h2 className="font-display font-bold uppercase mb-16 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
-              {contentData.services.header}
+              {contentData.education.header}
             </h2>
-
-            <div className="flex flex-col gap-8 relative z-10">
-              {contentData.services.items.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col md:flex-row md:items-center justify-between border-b border-border pb-6 animate-entrance"
-                  data-speed={(0.1 * (idx + 1)).toString()}
-                >
-                  <h3 className="font-display text-2xl text-primary mb-2 md:mb-0">
-                    {item.title}
-                  </h3>
-                  <div className="font-mono text-sm tracking-widest uppercase text-secondary whitespace-nowrap bg-surface px-4 py-2 rounded-sm border border-border inline-block">
-                    {item.price}
+            
+            <div className="flex flex-col gap-12">
+              {contentData.education.items.map((item, idx) => (
+                <div key={idx} className="border-l border-border pl-8 relative animate-entrance" data-speed={(0.1 * (idx + 1)).toString()}>
+                  <div className="absolute w-2 h-2 rounded-full bg-primary -left-[4px] top-2" />
+                  <div className="flex items-start gap-4 mb-3">
+                    {item.logo && (
+                      <div
+                        className="shrink-0 flex items-center justify-center"
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          background: 'var(--color-surface, #f4f4f4)',
+                          border: '0.5px solid var(--color-border)',
+                          padding: '6px',
+                        }}
+                      >
+                        <Image
+                          src={item.logo}
+                          alt={item.institution}
+                          width={36}
+                          height={36}
+                          style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+                          unoptimized
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-display font-semibold text-xl mb-1 text-primary">{item.institution}</h3>
+                      <p className="font-mono text-sm text-secondary uppercase tracking-wider">{item.specialty}</p>
+                    </div>
                   </div>
+                  <p className="font-body text-secondary leading-relaxed max-w-2xl">{item.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Section 5 — Contacts */}
+        {/* Section 6 — Contacts */}
         <section
           id="contacts"
           className="min-h-screen flex items-center justify-center relative"
@@ -415,7 +606,7 @@ export default function Page() {
                 {/* Left — Heading + Email + Social + Photo */}
                 <div data-speed="0.15" className="flex flex-col justify-center">
                   <p className="font-mono text-xs mb-8 tracking-widest uppercase text-secondary animate-entrance">
-                    [STEP.06/06] — Contacts
+                    [STEP.05/05] — Contacts
                   </p>
                   <h2 className="font-display font-bold uppercase mb-10 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
                     {contentData.contacts.header}
