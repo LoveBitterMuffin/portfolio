@@ -172,7 +172,11 @@ const OptionWheel = ({
   });
 
   const startLoop = useCallback(() => {
-    if (rafRef.current != null) return;
+    if (rafRef.current != null) {
+      // Cancel existing animation to restart with new target
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     lastRef.current = performance.now();
     rafRef.current = requestAnimationFrame(runFrame);
   }, [runFrame]);

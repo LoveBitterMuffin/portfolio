@@ -733,7 +733,8 @@ export default function Page() {
         className="fixed right-0 top-1/2 -translate-y-1/2 w-[380px] sm:w-[420px] h-[500px] z-40 pointer-events-none hidden md:block"
         aria-label="Navigation Wheel HUD"
       >
-        <div className="w-full h-full relative pointer-events-auto bg-transparent overflow-hidden flex items-center">
+        <div className="w-full h-full relative pointer-events-none bg-transparent overflow-hidden flex items-center">
+          <div className="pointer-events-auto w-full h-full">
           <OptionWheel
             items={[...SECTIONS]}
             defaultSelected={0}
@@ -752,6 +753,7 @@ export default function Page() {
             activeColor="var(--color-primary)"
             wheelPassthrough={true}
           />
+          </div>
         </div>
       </div>
     </>
