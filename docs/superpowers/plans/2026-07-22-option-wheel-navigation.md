@@ -1,379 +1,205 @@
-# OptionWheel Navigation & Services Inspection Card Implementation Plan
+# OptionWheel Global Side HUD Navigation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Integrate the `OptionWheel` component as an interactive central controller in the Services section (`src/app/page.tsx`) with 1px contour line Void aesthetic and dynamic service inspection details card.
+**Goal:** Implement `OptionWheel` as a fixed Global Side HUD Navigation Controller ("Штурвал навигации") pinned to the right edge of the screen, with bi-directional scrolling sync between page sections and the wheel.
 
-**Architecture:** 
-1. Enrich service data items in `src/data/content.json` with detailed deliverables, subtitle, and descriptions.
-2. Refactor `OptionWheel.jsx` & `OptionWheel.css` for Void aesthetic (concentric 1px guide rings with `15%` opacity, pure `#000000` background, no legacy gradients/gray blocks).
-3. Replace static services list in `src/app/page.tsx` with a responsive 2-column layout (OptionWheel + Dynamic Inspection Glass Card).
+**Architecture:**
+1. Update `OptionWheel.jsx` to support smooth controlled external updates when the `selected` prop changes (e.g. when page scroll changes `activeSection`).
+2. Restore `Services` section in `src/app/page.tsx` to a clean cards layout displaying deliverables and prices.
+3. Position `OptionWheel` fixed on the right side HUD container (`position: fixed`, right edge, vertically centered).
+4. Bind `OptionWheel` to `SECTIONS = ['About', 'Experience', 'Services', 'Education', 'Contacts']` with bi-directional sync:
+   - Page scroll updates `activeSection` -> OptionWheel rotates to match.
+   - User rotates/clicks OptionWheel -> `handleNavClick` smoothly scrolls page to section.
 
-**Tech Stack:** Next.js (React), CSS modules / Tailwind CSS, OptionWheel controller, GSAP.
+**Tech Stack:** Next.js, React, OptionWheel, GSAP.
 
 ## Global Constraints
-- Pure `#000000` void aesthetic background for OptionWheel.
-- 1px thin contour outlines (`rgba(255, 255, 255, 0.15)`).
-- Preserve accessibility (ARIA `listbox` / `option`, keyboard arrow navigation).
+- Pure `#000000` void aesthetic, 1px contour lines (`rgba(255, 255, 255, 0.15)`).
+- Preserve horizontal scroll track in `About` section.
+- Non-intrusive HUD visible on desktop (≥768px).
 
 ---
 
-### Task 1: Update Services Content Data Structure
-
-**Files:**
-- Modify: `src/data/content.json:85-92`
-
-**Interfaces:**
-- Consumes: `contentData.services`
-- Produces: `services.items` array with `id`, `title`, `subtitle`, `description`, `deliverables`, `price`
-
-- [ ] **Step 1: Update content.json with rich services dataset**
-
-Edit `src/data/content.json` under `"services"`:
-```json
-  "services": {
-    "header": "УСЛУГИ // SERVICES & SOLUTIONS",
-    "items": [
-      {
-        "id": "web-dev",
-        "title": "Web Development & Web Engines",
-        "subtitle": "Высоконагруженные веб-приложения & SPA",
-        "description": "Проектирование и разработка современных веб-сервисов с акцентом на скорость, SEO и отзывчивость.",
-        "deliverables": ["Next.js / React Architecture", "GSAP & Three.js 3D/FX", "Core Web Vitals 95+"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "devsecops",
-        "title": "DevSecOps & Cloud Infrastructure",
-        "subtitle": "Оркестрация, безопасность & CI/CD",
-        "description": "Построение надежных CI/CD пайплайнов, контейнеризация приложений и зашифрованное управление секретами.",
-        "deliverables": ["Kubernetes & Docker Swarm", "GitLab CI / GitHub Actions", "Vault & Secrets Management"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "security-audit",
-        "title": "Security Audit & Code Review",
-        "subtitle": "Аудит по OWASP Top 10",
-        "description": "Комплексный анализ исходного кода, выявление уязвимостей и повышение устойчивости инфраструктуры.",
-        "deliverables": ["Static/Dynamic Analysis (SAST/DAST)", "OWASP Compliance", "План ликвидации угроз"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "interactive-3d",
-        "title": "Interactive 3D & Canvas FX",
-        "subtitle": "Three.js & WebGL рендеринг",
-        "description": "Интерактивные 3D-сцены, генеративные частицы и кастомные шейдеры для премиального UX.",
-        "deliverables": ["Custom WebGL Shaders", "GSAP ScrollTrigger sync", "GPU Optimization"],
-        "price": "по договоренности"
-      },
-      {
-        "id": "consulting",
-        "title": "Technical Consulting & Mentorship",
-        "subtitle": "Архитектурный консалтинг",
-        "description": "Экспертное сопровождение команд, аудит архитектурных решений и менторство разработчиков.",
-        "deliverables": ["Code Review", "Инфраструктурная карта", "Обучение команды"],
-        "price": "по договоренности"
-      }
-    ]
-  }
-```
-
-- [ ] **Step 2: Commit content update**
-
-```bash
-git add src/data/content.json
-git commit -m "feat(services): expand services data structure in content.json"
-```
-
----
-
-### Task 2: Refactor OptionWheel & OptionWheel.css for Void Aesthetic
+### Task 1: Add Controlled External Position Sync to OptionWheel
 
 **Files:**
 - Modify: `src/components/OptionWheel.jsx`
-- Modify: `src/components/OptionWheel.css`
 
 **Interfaces:**
-- Consumes: `OptionWheel` props (`items`, `defaultSelected`, `onChange`, `side`, `fontSize`, etc.)
-- Produces: `OptionWheel` component styled with 1px contour rings background and zero gray box artifacts.
+- Consumes: `selected` prop (optional external active index number)
+- Produces: Smooth animated target update when `selected` prop changes externally.
 
-- [ ] **Step 1: Add 1px contour background guide rings in `OptionWheel.jsx`**
+- [ ] **Step 1: Add `selected` prop handling in `OptionWheel.jsx`**
 
-Update `src/components/OptionWheel.jsx` render return to include concentric thin guide rings in the background:
+Update `OptionWheel.jsx` signature and effect:
 ```jsx
-return (
-  <div
-    ref={rootRef}
-    role="listbox"
-    tabIndex={0}
-    aria-label="Option wheel"
-    className={`option-wheel${side === 'right' ? ' option-wheel--right' : ''}${isDragging ? ' option-wheel--dragging' : ''}${className ? ` ${className}` : ''}`}
-    style={{
-      '--ow-text-color': textColor,
-      '--ow-active-color': activeColor,
-      '--ow-font-size': `${fontSize}rem`,
-      '--ow-inset': `${inset}px`
-    }}
-    onPointerDown={handlePointerDown}
-    onPointerMove={handlePointerMove}
-    onPointerUp={handlePointerEnd}
-    onPointerCancel={handlePointerEnd}
-    onKeyDown={handleKeyDown}
-  >
-    {/* 1px contour guide rings backdrop */}
-    <div className="option-wheel__ring-backdrop" aria-hidden="true">
-      <div className="option-wheel__ring option-wheel__ring--1" />
-      <div className="option-wheel__ring option-wheel__ring--2" />
-      <div className="option-wheel__ring option-wheel__ring--3" />
-    </div>
-
-    {items.map((label, index) => (
-      <div
-        key={`${label}-${index}`}
-        ref={el => {
-          itemRefs.current[index] = el;
-        }}
-        role="option"
-        aria-selected={selectedIndex === index}
-        className={`option-wheel__item${selectedIndex === index ? ' option-wheel__item--selected' : ''}`}
-        onClick={() => handleItemClick(index)}
-      >
-        {label}
-      </div>
-    ))}
-  </div>
-);
+const OptionWheel = ({
+  items = DEFAULT_ITEMS,
+  defaultSelected = 3,
+  selected = null, // External controlled active index
+  onChange = (index, item) => {},
+...
 ```
 
-- [ ] **Step 2: Update `OptionWheel.css` for 1px contour guides & Void Aesthetic**
-
-Edit `src/components/OptionWheel.css`:
-```css
-.option-wheel {
-  --ow-text-color: #a6a6a6;
-  --ow-active-color: #ffffff;
-  --ow-font-size: 2.2rem;
-  --ow-inset: 40px;
-
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 380px;
-  overflow: hidden;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-  outline: none;
-  background: transparent;
-}
-
-.option-wheel:focus-visible {
-  outline: 1px dashed rgba(255, 255, 255, 0.4);
-  outline-offset: -4px;
-}
-
-.option-wheel--dragging {
-  cursor: grabbing;
-}
-
-/* Concentric thin 1px guide rings (Void aesthetic) */
-.option-wheel__ring-backdrop {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.option-wheel__ring {
-  position: absolute;
-  top: 50%;
-  left: -20%;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.02);
-}
-
-.option-wheel__ring--1 {
-  width: 280px;
-  height: 280px;
-}
-
-.option-wheel__ring--2 {
-  width: 440px;
-  height: 440px;
-  border-color: rgba(255, 255, 255, 0.07);
-}
-
-.option-wheel__ring--3 {
-  width: 600px;
-  height: 600px;
-  border-color: rgba(255, 255, 255, 0.04);
-}
-
-/* Option Items */
-.option-wheel__item {
-  position: absolute;
-  top: 50%;
-  left: var(--ow-inset);
-  white-space: nowrap;
-  font-size: var(--ow-font-size);
-  line-height: 1.2;
-  font-weight: 300;
-  transform-origin: left center;
-  cursor: pointer;
-  z-index: 1;
-  will-change: transform, opacity, filter;
-  color: color-mix(in srgb, var(--ow-active-color) calc(var(--ow-p, 0) * 100%), var(--ow-text-color));
-  transition: text-shadow 0.3s ease;
-}
-
-.option-wheel--right .option-wheel__item {
-  left: auto;
-  right: var(--ow-inset);
-  transform-origin: right center;
-}
-
-.option-wheel__item--selected {
-  font-weight: 600;
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
-}
+Add effect to sync target when `selected` prop changes from outside:
+```jsx
+useEffect(() => {
+  if (selected !== null && selected !== undefined && selected >= 0) {
+    if (selectedRef.current !== selected) {
+      applyTarget(selected, true);
+    }
+  }
+}, [selected, applyTarget]);
 ```
 
-- [ ] **Step 3: Commit OptionWheel styling updates**
+- [ ] **Step 2: Commit OptionWheel prop update**
 
 ```bash
-git add src/components/OptionWheel.jsx src/components/OptionWheel.css
-git commit -m "feat(OptionWheel): implement 1px contour guide rings and void aesthetic"
+git add src/components/OptionWheel.jsx
+git commit -m "feat(OptionWheel): add controlled selected prop support for external scroll sync"
 ```
 
 ---
 
-### Task 3: Integrate OptionWheel & Dynamic Detail Card into Services Section
+### Task 2: Restore Clean Cards Layout in Services Section
 
 **Files:**
-- Modify: `src/app/page.tsx:455-486`
+- Modify: `src/app/page.tsx`
 
 **Interfaces:**
-- Consumes: `OptionWheel` component, `contentData.services`
-- Produces: Interactive Services Section with central `OptionWheel` controller and dynamic detail inspection card.
+- Consumes: `contentData.services.items`
+- Produces: Clean cards representation in `#services` section.
 
-- [ ] **Step 1: Import OptionWheel and setup active service state in `src/app/page.tsx`**
+- [ ] **Step 1: Replace `#services` section in `src/app/page.tsx` with clean cards grid**
 
-In `src/app/page.tsx`:
-Import `OptionWheel`:
+Update `#services` in `src/app/page.tsx`:
 ```tsx
-import OptionWheel from '../components/OptionWheel';
-```
-
-In `Page()` state initialization:
-```tsx
-const [activeServiceIndex, setActiveServiceIndex] = useState(0);
-```
-
-- [ ] **Step 2: Replace static Services list with interactive 2-column OptionWheel layout**
-
-In `src/app/page.tsx` under `#services`:
-```tsx
-{/* Section 4 — Services (Interactive OptionWheel Controller) */}
+{/* Section 4 — Services */}
 <section
   id="services"
-  className="min-h-screen flex flex-col justify-center relative overflow-hidden py-16"
+  className="min-h-screen flex items-center relative overflow-hidden py-20"
   style={{ background: 'transparent', paddingLeft: '10vw', paddingRight: '10vw' }}
 >
-  <div className="w-full max-w-6xl mx-auto">
+  <div className="w-full max-w-5xl mx-auto">
     <p className="font-mono text-xs mb-4 tracking-widest uppercase text-secondary animate-entrance">
       [STEP.03/05] — Services & Solutions
     </p>
-    <h2 className="font-display font-bold uppercase mb-12 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
+    <h2 className="font-display font-bold uppercase mb-16 text-primary animate-entrance" style={{ fontSize: 'var(--text-h1)' }}>
       {contentData.services.header}
     </h2>
 
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-      {/* Left Column: Interactive OptionWheel */}
-      <div className="lg:col-span-5 h-[380px] sm:h-[420px] relative rounded-2xl border border-border/40 bg-surface/20 backdrop-blur-md overflow-hidden flex items-center shadow-2xl">
-        <OptionWheel
-          items={contentData.services.items.map((item) => item.title)}
-          defaultSelected={0}
-          onChange={(index) => setActiveServiceIndex(index)}
-          side="left"
-          fontSize={isMobile ? 1.2 : 1.5}
-          curve={1.1}
-          tilt={7}
-          inset={isMobile ? 24 : 40}
-        />
-      </div>
-
-      {/* Right Column: Dynamic Service Detail Card */}
-      <div className="lg:col-span-7 flex flex-col justify-between min-h-[380px] rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 sm:p-10 shadow-2xl transition-all duration-300">
-        {contentData.services.items[activeServiceIndex] && (
-          <div className="flex flex-col justify-between h-full">
-            <div>
-              <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
-                <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
-                  [SERVICE.0{activeServiceIndex + 1} / 0{contentData.services.items.length}]
-                </span>
-                <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
-                  {contentData.services.items[activeServiceIndex].price}
-                </span>
-              </div>
-
-              <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-primary mb-2">
-                {contentData.services.items[activeServiceIndex].title}
-              </h3>
-              <p className="font-mono text-xs text-accent uppercase tracking-wider mb-6">
-                {contentData.services.items[activeServiceIndex].subtitle}
-              </p>
-
-              <p className="font-body text-base text-secondary leading-relaxed mb-8">
-                {contentData.services.items[activeServiceIndex].description}
-              </p>
-
-              <div className="mb-8">
-                <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80 mb-3 font-semibold">
-                  Ключевые результаты / Deliverables:
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {contentData.services.items[activeServiceIndex].deliverables.map((item, idx) => (
-                    <span
-                      key={idx}
-                      className="font-mono text-xs px-3 py-1.5 rounded-sm border border-border/60 bg-surface/80 text-primary"
-                    >
-                      ✓ {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+      {contentData.services.items.map((item, idx) => (
+        <div
+          key={item.id || idx}
+          className="rounded-2xl border border-border bg-surface/40 backdrop-blur-xl p-8 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-primary/40 group"
+        >
+          <div>
+            <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-6">
+              <span className="font-mono text-xs tracking-widest uppercase text-accent font-semibold">
+                [0{idx + 1} / 0{contentData.services.items.length}]
+              </span>
+              <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded border border-border bg-surface text-secondary">
+                {item.price}
+              </span>
             </div>
 
-            <div className="pt-6 border-t border-border/40 flex items-center justify-between">
-              <span className="font-mono text-xs text-secondary">
-                CONTROLLER: OPTIONWHEEL ACTIVE
-              </span>
-              <a
-                href="#contacts"
-                className="font-mono text-xs uppercase tracking-wider px-5 py-2.5 rounded border border-accent bg-accent/10 text-primary hover:bg-accent hover:text-black transition-all duration-200 font-semibold"
-              >
-                Запросить расчет →
-              </a>
+            <h3 className="font-display text-2xl font-bold uppercase text-primary mb-2 group-hover:text-accent transition-colors">
+              {item.title}
+            </h3>
+            <p className="font-mono text-xs text-accent uppercase tracking-wider mb-4">
+              {item.subtitle}
+            </p>
+
+            <p className="font-body text-sm text-secondary leading-relaxed mb-6">
+              {item.description}
+            </p>
+
+            <div className="flex flex-wrap gap-2 mb-6">
+              {item.deliverables.map((deliv, dIdx) => (
+                <span
+                  key={dIdx}
+                  className="font-mono text-[11px] px-2.5 py-1 rounded-sm border border-border/50 bg-surface/60 text-primary/90"
+                >
+                  ✓ {deliv}
+                </span>
+              ))}
             </div>
           </div>
-        )}
-      </div>
+
+          <div className="pt-4 border-t border-border/40 flex items-center justify-between">
+            <span className="font-mono text-[11px] text-secondary uppercase tracking-wider">
+              {item.id}
+            </span>
+            <a
+              href="#contacts"
+              className="font-mono text-xs uppercase text-accent group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 font-semibold"
+            >
+              Заказать →
+            </a>
+          </div>
+        </div>
+      ))}
     </div>
   </div>
 </section>
 ```
 
-- [ ] **Step 3: Commit Services OptionWheel integration**
+- [ ] **Step 2: Commit Services cards update**
 
 ```bash
 git add src/app/page.tsx
-git commit -m "feat(services): integrate OptionWheel interactive controller with dynamic detail card"
+git commit -m "feat(services): restore clean cards grid layout for services section"
+```
+
+---
+
+### Task 3: Integrate Fixed Global Side HUD Controller in page.tsx
+
+**Files:**
+- Modify: `src/app/page.tsx`
+
+**Interfaces:**
+- Consumes: `OptionWheel`, `SECTIONS`, `activeSection`, `handleNavClick`
+- Produces: Floating HUD anchored on right side of viewport.
+
+- [ ] **Step 1: Add Global OptionWheel HUD component to page layout**
+
+In `src/app/page.tsx`, before closing main or after `<ScrollProgressIndicator>`:
+```tsx
+{/* ── Global Side HUD Controller (OptionWheel Штурвал Навигации) ──────── */}
+<div
+  className="fixed right-2 top-1/2 -translate-y-1/2 w-[240px] sm:w-[280px] h-[360px] z-40 pointer-events-none hidden md:block"
+  aria-label="Navigation Wheel HUD"
+>
+  <div className="w-full h-full relative pointer-events-auto rounded-l-2xl border-l border-y border-border/30 bg-black/40 backdrop-blur-md overflow-hidden flex items-center shadow-2xl">
+    <OptionWheel
+      items={[...SECTIONS]}
+      defaultSelected={0}
+      selected={activeSection >= 0 ? activeSection : 0}
+      onChange={(index) => {
+        // Prevent feedback loop if triggered by scroll sync
+        if (index !== activeSectionRef.current) {
+          handleNavClick(index);
+        }
+      }}
+      side="right"
+      fontSize={1.3}
+      curve={1.3}
+      tilt={10}
+      inset={24}
+      wheelPassthrough={true}
+    />
+  </div>
+</div>
+```
+
+- [ ] **Step 2: Commit Global Side HUD integration**
+
+```bash
+git add src/app/page.tsx
+git commit -m "feat(navigation): integrate global OptionWheel side HUD controller with bi-directional sync"
 ```
 
 ---
@@ -381,15 +207,9 @@ git commit -m "feat(services): integrate OptionWheel interactive controller with
 ### Task 4: Verification & Build Check
 
 **Files:**
-- None (Build & run verification)
+- Build check
 
 - [ ] **Step 1: Execute production build**
 
 Run: `npm run build`
-Expected: Build succeeds with 0 errors.
-
-- [ ] **Step 2: Commit any final adjustments**
-
-```bash
-git status
-```
+Expected: Build passes with 0 errors.
