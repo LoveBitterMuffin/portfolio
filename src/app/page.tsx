@@ -143,6 +143,9 @@ export default function Page() {
               activeSectionRef.current = sectionIndex;
               
               if (sectionIndex === 0) {
+                // Ensure section color and state are reset to Intro
+                backgroundCanvasRef.current?.morphTo(0);
+                
                 // Restore morph based on current mouse position
                 const progressX = lastClientXRef.current / window.innerWidth;
                 if (progressX < 0.4 || progressX > 0.6) {
@@ -150,7 +153,6 @@ export default function Page() {
                   backgroundCanvasRef.current?.morphToGeometry('pill');
                 } else {
                   backgroundCanvasRef.current?.setPillMode(false);
-                  backgroundCanvasRef.current?.morphToGeometry('grid');
                 }
               } else {
                 // Clear any pill mode / color overrides from intro
